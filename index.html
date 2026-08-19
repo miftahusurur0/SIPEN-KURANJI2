@@ -594,7 +594,7 @@ table.tw tbody tr:hover{background:#E3F2FD}
 //  2. Type: Web App > Execute as: Me > Who has access: Anyone
 //  3. Klik Deploy > Copy URL yang muncul
 // ================================================================
-const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzmZhRFffldmp4S-r82uUVdTZmYg2tGG6mU1FVuEL0x92OBlbMwqDEWXwN8uxWVD_1A/exec';
+const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzozUFrSLnXsw0IkfQC8VxaFejpB_ZBjmoOS4UmPTrvUdQAlz1-dxLblh0orC82jUo/exec';
 
 // Deteksi mode: jika di dalam iframe GAS, gunakan google.script.run
 const GAS_MODE = (typeof google !== 'undefined' && google.script && google.script.run);
@@ -777,6 +777,7 @@ let masterInstansi = [], masterDrivers = [];
 let currentPage = null, currentSubTab = {};
 let photoAntarBase64 = null, photoJemputBase64 = null;
 let selectedPengambilanId = null;
+let selectedPengambilanInstansi = null;
 
 /* ============================================================
    UTIL
@@ -987,6 +988,9 @@ function renderDriverDashboard(){
         html+='</div>';
       });
       html+='</div></div>';
+    } else if (distList.length) {
+      html+='<div class="tw-card animate-fadeUp"><h2><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0D47A1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg> Peta Rute Distribusi Hari Ini</h2>'+
+        '<div class="tw-empty"><i data-lucide="map-pin-off" class="icon-lg empty-icon"></i><br>Lokasi belum tercatat untuk pengiriman hari ini.<br><span style="color:#6B7280;font-size:12px">Pastikan izin lokasi (GPS) diaktifkan saat mengambil foto bukti antar. Admin juga bisa mengisi koordinat instansi di menu Master Instansi sebagai cadangan.</span></div></div>';
     }
 
     // Peta minggu ini
@@ -1350,6 +1354,7 @@ function openPengambilanForm(idDistribusi){
   area.innerHTML='<div class="tw-empty"><div class="tw-spinner" style="margin:0 auto"></div><br>Memuat data...</div>';
   apiCall_({action:'getDistribusi',tanggal:todayStr(),noPol:noPol,status:'Antar',_nocache:Date.now()}).then(res=>{
     const distItem=(res.data||[]).find(d=>d.ID_Distribusi===idDistribusi);
+    selectedPengambilanInstansi = distItem ? (distItem.Instansi || 'Instansi') : 'Instansi';
     const curPK=distItem?distItem.PK:0;
     const curPB=distItem?distItem.PB:0;
     let html='<div class="tw-card animate-fadeUp"><h2><i data-lucide="package" class="icon-md"></i> Ubah PK/PB Pengambilan</h2>';
@@ -1374,7 +1379,7 @@ function openPengambilanForm(idDistribusi){
 function submitPengambilan(){
   if(!photoJemputBase64){ showToast('Foto bukti pengambilan wajib diambil','warning'); return; }
   showLoading('Mengunggah foto...');
-  const fname='Pengambilan-'+selectedPengambilanId+'-'+todayStr()+'.jpg';
+  const fname='Pengambilan-'+(selectedPengambilanInstansi||'Instansi')+'-'+todayStr()+'.jpg';
   invalidateCache(); apiCall_({action:'uploadFoto',base64:photoJemputBase64.base64,mime:photoJemputBase64.mime,filename:fname}).then(fotoRes=>{
     if(fotoRes.status!=='ok'){ hideLoading(); showToast(fotoRes.message||'Upload gagal','error'); return; }
     showLoading('Menyimpan...');
