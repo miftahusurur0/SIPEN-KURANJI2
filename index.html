@@ -223,7 +223,6 @@ table.tw tbody tr:hover{background:#E3F2FD}
 .login-logo .icon{width:76px;height:76px;background:linear-gradient(135deg,#1565C0,#0D47A1);border-radius:22px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 12px 30px rgba(21,101,192,.4);animation:bounceS 3s ease-in-out infinite}
 .login-logo h1{margin:0;font-size:21px;color:#0D47A1;letter-spacing:-.3px}
 .login-logo p{margin:6px 0 0;color:#6B7280;font-size:13px}
-/* role-toggle removed: single login form, role auto-detected from backend */
 
 /* Route timeline */
 .rtl-container{position:relative;padding:16px 0}
@@ -592,9 +591,10 @@ table.tw tbody tr:hover{background:#E3F2FD}
 //  Cara mendapatkan URL Web App:
 //  1. Buka script.google.com > Deployment > New Deployment
 //  2. Type: Web App > Execute as: Me > Who has access: Anyone
-//  3. Klik Deploy > Copy URL yang muncul
+//  3. Klik Deploy > Copy URL yang muncul (berakhiran /exec)
 // ================================================================
-const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyi1rVIuTkgEx2kiLdCslPxEb_b8gFR-6C-FarVjC8hWA_qSi7FxJqZgTqXyfyUs3rn/exec';
+// ⚠️ GANTI URL INI DENGAN URL DEPLOYMENT AKTIF ANDA ⚠️
+const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwE2aiKBKIu2g_8pgFf2dNnACKUvGNIE7XS4BFpjwejFRddEILziQEllpfm3pGDMucs/exec';
 
 // Deteksi mode: jika di dalam iframe GAS, gunakan google.script.run
 const GAS_MODE = (typeof google !== 'undefined' && google.script && google.script.run);
@@ -623,7 +623,7 @@ function _setCache(key, data, ttl) {
 const cacheableActions = ['getInstansi','getDrivers','getSPPG','getStats','getPeriodStats','getSesi','getTugas','getDistribusi','getRouteTimeline','getPendingRegs','listUsers','initApp','getAllMasterData'];
 // Aksi yang MENGUBAH data di server. Setelah aksi ini sukses, seluruh cache
 // otomatis dibersihkan supaya data baru langsung muncul (tidak perlu lagi
-// mengandalkan pemanggilan invalidateCache() manual yang tersebar di kode).
+// mengandalkan invalidateCache() manual yang tersebar di kode).
 const WRITE_ACTION_RE = /^(save|delete|admin|assign|approve|reject|verify|register|link|resend|update|change|set)/i;
 const GAS_CALL_TIMEOUT_MS = 25000; // safety-net agar UI tidak menggantung tanpa pesan
 
@@ -698,8 +698,9 @@ async function apiCall_(data) {
     // === MODE EKSTERNAL (Vercel/Netlify): pakai fetch ke GAS_WEBAPP_URL ===
     if (!GAS_WEBAPP_URL || GAS_WEBAPP_URL === 'PASTE_URL_WEB_APP_DISINI') {
       console.error('[apiCall_] GAS_WEBAPP_URL belum diisi');
-      return { status: 'error', message: 'GAS_WEBAPP_URL belum diisi. Ganti PASTE_URL_WEBAPP_DISINI dengan URL Web App Anda.' };
+      return { status: 'error', message: 'GAS_WEBAPP_URL belum diisi. Ganti PASTE_URL_WEB_APP_DISINI dengan URL Web App Anda.' };
     }
+    console.log('[apiCall_] Menggunakan URL:', GAS_WEBAPP_URL);
     promise = fetch(GAS_WEBAPP_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
