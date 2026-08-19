@@ -594,7 +594,7 @@ table.tw tbody tr:hover{background:#E3F2FD}
 //  2. Type: Web App > Execute as: Me > Who has access: Anyone
 //  3. Klik Deploy > Copy URL yang muncul
 // ================================================================
-const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyi1rVIuTkgEx2kiLdCslPxEb_b8gFR-6C-FarVjC8hWA_qSi7FxJqZgTqXyfyUs3rn/exec';
+const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxFlBzsqzU67LJ7J6yc9SasFH02jxAFo23ybgtdBpfulGutQKKgh_qywj141T0QCcW9/exec';
 
 // Deteksi mode: jika di dalam iframe GAS, gunakan google.script.run
 const GAS_MODE = (typeof google !== 'undefined' && google.script && google.script.run);
@@ -747,18 +747,6 @@ function invalidateCache(actionPattern) {
   _cache.clear();
   _inflight.clear();
   console.log('[invalidateCache] Cache cleared at', new Date().toISOString());
-}
-
-// Fungsi cek koneksi ke GAS Web App
-async function checkConnection() {
-  try {
-    const separator = GAS_WEBAPP_URL.includes('?') ? '&' : '?';
-    const r = await fetch(GAS_WEBAPP_URL + separator + 'action=ping', { redirect: 'follow' });
-    if (r.ok) return true;
-    return false;
-  } catch (e) {
-    return false;
-  }
 }
 
 function togglePasswordVisibility(inputId, btn){
@@ -1274,24 +1262,75 @@ function updateTugasAfterDelivery(idInstansi){
   });
 }
 
+/* ============================================================
+   ============  DRIVER: PENGAMBILAN (diperbaiki)  ============
+   ============================================================ */
 function renderPengambilan(){
   const noPol=currentUser.driverData.NoPol;
   const cont=document.getElementById('distribusiSubContent');
   cont.innerHTML='<div class="tw-empty"><div class="tw-spinner" style="margin:0 auto"></div><br>Memuat...</div>';
-  // Fetch semua distribusi hari ini (Antar + Selesai) untuk tampilan lengkap
   const _nc=Date.now();
   Promise.all([
     apiCall_({action:'getDistribusi',tanggal:todayStr(),noPol:noPol,status:'Antar',_nocache:_nc}),
-    apiCall_({action:'getDistribusi',tanggal:todayStr(),noPol:noPol,status:'Selesai',_nocache:_nc})
-  ]).then(([antarRes,selesaiRes])=>{
+    apiCall_({action:'getDistribusi',tanggal:todayStr(),noPol:noPol,status:'Selesai',_nocache:_nc}),
+    apiCall_({action:'getSPPG',_nocache:_nc})
+  ]).then(([antarRes,selesaiRes,sppgRes])=>{
     console.log('[renderPengambilan] antar:', antarRes ? antarRes.status : 'null', 'count:', (antarRes&&antarRes.data)?antarRes.data.length:0);
     console.log('[renderPengambilan] selesai:', selesaiRes ? selesaiRes.status : 'null', 'count:', (selesaiRes&&selesaiRes.data)?selesaiRes.data.length:0);
     const antarList=(antarRes&&antarRes.data?antarRes.data:[]);
     const selesaiList=(selesaiRes&&selesaiRes.data?selesaiRes.data:[]);
+    const sppgData = (sppgRes && sppgRes.sppg) || null;
+    const sppgLat = sppgData ? Number(sppgData.lat) : -6.2;
+    const sppgLng = sppgData ? Number(sppgData.lng) : 106.816666;
+    const sppgNama = sppgData ? sppgData.nama : 'SPPG Pusat';
+
+    // Gabungkan antar + selesai untuk peta pengambilan
+    const allPickup = [...antarList, ...selesaiList];
+    const pickupPoints = allPickup.filter(function(d){ return d.LatAntar && d.LngAntar; });
+    pickupPoints.sort(function(a,b){ return Number(a.Sesi)-Number(b.Sesi) || new Date(a.WaktuAntar)-new Date(b.WaktuAntar); });
 
     let html='';
 
-    // --- Bagian: Menunggu Pengambilan ---
+    // --- Peta Rute Pengambilan (SPPG → lokasi pengambilan) ---
+    html+='<div class="tw-card animate-fadeUp"><h2><i data-lucide="map" class="icon-md"></i> Peta Rute Pengambilan Hari Ini</h2>';
+    if(pickupPoints.length){
+      const waypoints = [sppgLat+','+sppgLng];
+      pickupPoints.forEach(function(d){ waypoints.push(encodeURIComponent(d.LatAntar)+','+encodeURIComponent(d.LngAntar)); });
+      const dirUrl = 'https://maps.google.com/maps/dir/'+waypoints.join('/')+'?output=embed&z=13';
+      html+='<div style="border-radius:14px;overflow:hidden;border:1.5px solid #E0E0E0">';
+      html+='<iframe width="100%" height="250" frameborder="0" style="border:0" src="'+dirUrl+'" allowfullscreen></iframe></div>';
+      html+='<div style="margin-top:12px;padding:10px;background:linear-gradient(135deg,#F0F7FF,#E3F2FD);border-radius:12px">';
+      html+='<div style="font-size:11px;font-weight:800;color:#0D47A1;margin-bottom:6px;display:flex;align-items:center;gap:4px"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0D47A1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Alur Pengambilan</div>';
+      html+='<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:11px">';
+      html+='<div style="width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#0D47A1,#1565C0);color:#fff;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;flex:none">S</div>';
+      html+='<span style="font-weight:700;color:#0D47A1">'+escapeHTML(sppgNama)+'</span>';
+      html+='<span style="color:#6B7280;margin-left:auto;font-size:10px">Titik awal</span></div>';
+      pickupPoints.forEach(function(d,i){
+        const isDone = d.Status==='Selesai';
+        const dotBg = isDone ? 'background:linear-gradient(135deg,#2E7D32,#43A047)' : 'background:linear-gradient(135deg,#FF6F00,#E65100)';
+        html+='<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:11px">';
+        html+='<div style="width:20px;height:20px;border-radius:50%;'+dotBg+';color:#fff;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;flex:none">'+(i+1)+'</div>';
+        html+='<div style="flex:1;min-width:0"><div style="font-weight:700;color:#0D47A1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escapeHTML(d.Instansi)+'</div>';
+        html+='<div style="color:#6B7280;font-size:10px">Antar: '+(d.WaktuAntar?fmtTime(d.WaktuAntar):'-')+(isDone?' &rarr; Jemput: '+fmtTime(d.WaktuJemput):'')+'</div></div>';
+        html+='<span class="tw-tag '+(isDone?'success':'warning')+'" style="flex:none;font-size:9px">'+escapeHTML(d.Status)+'</span></div>';
+      });
+      html+='</div>';
+    } else {
+      html+='<div class="tw-empty"><i data-lucide="map-pin-off" class="icon-lg empty-icon"></i><br>Belum ada lokasi pengambilan hari ini.</div>';
+    }
+    html+='</div>';
+
+    // --- Progres Pengambilan ---
+    const totalPickup = antarList.length + selesaiList.length;
+    const donePickup = selesaiList.length;
+    html+='<div class="tw-card animate-fadeUp"><h2><i data-lucide="rotate-ccw" class="icon-md"></i> Progres Pengambilan</h2>'
+      + progressRow('Sudah diambil', donePickup, totalPickup, 'ok')
+      + '<div class="stats-grid" style="margin-top:6px">'
+      + stat(donePickup, 'Selesai')
+      + stat(antarList.length, 'Menunggu')
+      + '</div></div>';
+
+    // --- Daftar Menunggu Pengambilan ---
     html+='<div class="tw-card animate-fadeUp"><h2><i data-lucide="rotate-ccw" class="icon-md"></i> Menunggu Pengambilan <span class="tw-badge">'+antarList.length+'</span></h2>';
     if(!antarList.length){
       html+='<div class="tw-empty"><i data-lucide="inbox" class="icon-md empty-icon"></i><br>Tidak ada pengiriman yang menunggu diambil.</div>';
@@ -1309,7 +1348,7 @@ function renderPengambilan(){
     }
     html+='</div>';
 
-    // --- Bagian: Sudah Diambil Hari Ini ---
+    // --- Sudah Diambil Hari Ini ---
     if(selesaiList.length){
       html+='<div style="margin-top:10px;padding:10px 14px;background:#E8F5E9;border-radius:10px;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleDonePengambilan()">'+
         '<span style="font-size:12px;font-weight:700;color:#2E7D32"><i data-lucide="check-circle" class="icon-sm"></i> '+selesaiList.length+' pengambilan selesai hari ini</span>'+
@@ -1320,7 +1359,6 @@ function renderPengambilan(){
           '<div style="display:flex;justify-content:space-between;align-items:center"><b style="color:#374151;font-size:13.5px">'+escapeHTML(d.Instansi)+'</b><span class="tw-tag success">Selesai</span></div>'+
           '<div style="font-size:12px;color:#6B7280;margin-top:4px">PK '+d.PK+' / PB '+d.PB+' &middot; Total '+d.Total+'</div>'+
           '<div style="font-size:11.5px;color:#6B7280;margin-top:2px">Antar: '+fmtTime(d.WaktuAntar)+' &rarr; Jemput: '+fmtTime(d.WaktuJemput)+'</div>'+
-          // Foto bukti Antar + Jemput
           '<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">'+
           (d.FotoAntar_Url?'<a href="'+escapeAttr(d.FotoAntar_Url)+'" target="_blank" style="width:65px;height:65px;border-radius:8px;overflow:hidden;border:1.5px solid #C8E6C9;display:block;position:relative">'+
             '<img src="'+escapeAttr(d.FotoAntar_Url)+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'+
@@ -1401,7 +1439,7 @@ function submitPengambilan(){
       invalidateCache();
       // Beri jeda 500ms agar Google Sheets sempat menyimpan data sebelum render ulang
       setTimeout(function(){ invalidateCache(); renderPengambilan(); }, 500);
-    } else showToast(res.message||'Gagal menyimpan','error');
+    } else showToast(res.message||'Gagal','error');
   }).catch(err=>{hideLoading();showToast('Error: '+err.message,'error')});
 }
 
@@ -2156,7 +2194,7 @@ function requestResendOTP(){
 }
 
 /* ============================================================
-   ================  DATABASE SETUP (login screen)  ================
+   ================  KONEKSI (diperbaiki)  ======================
    ============================================================ */
 function updateConnStatus(ok, msg) {
   const el = document.getElementById('connStatus');
@@ -2176,30 +2214,32 @@ async function autoInitApp() {
   if (GAS_MODE) {
     if (el) el.textContent = 'Mode Google Apps Script';
   } else {
-    // Mode eksternal: cek koneksi API ping dulu
+    // Mode eksternal: cek koneksi dengan memanggil initApp langsung
     if (el) el.textContent = 'Memeriksa koneksi...';
-    const connected = await checkConnection();
-    if (!connected) {
-      updateConnStatus(false, 'Pastikan GAS_WEBAPP_URL sudah benar di kode index.html');
-      return;
-    }
   }
 
-  // Cek database status
+  // Coba panggil initApp untuk verifikasi koneksi dan status database
   try {
     const res = await apiCall_({action:'initApp'});
     if (res.status === 'ok') {
       updateConnStatus(true, res.dbName ? 'Database: ' + res.dbName : 'Database siap');
       if (GAS_MODE || res.dbName) {
-        // Di GAS_MODE langsung sembunyikan, di mode external tunggu 6 detik
         const hideDelay = GAS_MODE ? 100 : 6000;
         setTimeout(() => { const a = document.getElementById('connStatusArea'); if(a) a.style.display = 'none'; }, hideDelay);
       }
     } else {
-      updateConnStatus(false, res.message || 'Database belum siap');
+      // Jika gagal, tampilkan pesan error yang jelas
+      let msg = res.message || 'initApp gagal. Periksa GAS_WEBAPP_URL dan pastikan Web App sudah di-deploy dengan akses "Siapa saja".';
+      updateConnStatus(false, msg);
     }
   } catch(err) {
-    updateConnStatus(false, err.message);
+    // Jika terjadi error (mis. fetch gagal, CORS, dll)
+    let msg = err.message || 'Koneksi gagal. Pastikan GAS_WEBAPP_URL benar dan server dapat diakses.';
+    // Jika URL masih placeholder, beri pesan khusus
+    if (GAS_WEBAPP_URL === 'PASTE_URL_WEB_APP_DISINI' || !GAS_WEBAPP_URL) {
+      msg = 'GAS_WEBAPP_URL belum diisi. Ganti PASTE_URL_WEB_APP_DISINI dengan URL Web App Anda.';
+    }
+    updateConnStatus(false, msg);
   }
 }
 
