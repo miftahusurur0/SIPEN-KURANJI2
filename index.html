@@ -253,6 +253,11 @@ table.tw tbody tr:hover{background:#E3F2FD}
 .rtl-summary-item{background:#fff;border-radius:12px;padding:12px;text-align:center;border:1px solid #EEF1F5}
 .rtl-summary-item .val{font-size:19px;font-weight:800;background:linear-gradient(135deg,#1565C0,#0D47A1);-webkit-background-clip:text;background-clip:text;color:transparent}
 .rtl-summary-item .lbl{font-size:9.5px;color:#6B7280;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.mbg-pin{background:transparent!important;border:none!important}
+.mbg-leaflet-wrap .leaflet-container{font-family:inherit;background:#E8EEF5}
+.mbg-map-static img{transition:opacity .25s ease}
+.mbg-map-static img[src=""]{opacity:0}
+
 
 @media(max-width:700px){.tw-input,.tw-select,.tw-textarea{font-size:16px}}
 
@@ -594,7 +599,16 @@ table.tw tbody tr:hover{background:#E3F2FD}
 //  3. Klik Deploy > Copy URL yang muncul (berakhiran /exec)
 // ================================================================
 // ⚠️ GANTI URL INI DENGAN URL DEPLOYMENT AKTIF ANDA ⚠️
-const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwE2aiKBKIu2g_8pgFf2dNnACKUvGNIE7XS4BFpjwejFRddEILziQEllpfm3pGDMucs/exec';
+const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbx_pJB9V4Bea7sSV1zWiwJOpXGOycuLaz2m2uj5kJX3dydYpfyXxJK8MAkWMMrLw3n1/exec';
+
+// ================================================================
+//  GOOGLE MAPS STATIC API
+//  1. console.cloud.google.com → pilih project
+//  2. Enable "Maps Static API"
+//  3. Credentials → Create API key (batasi ke Maps Static API)
+//  4. Tempel key di bawah. Kosong = fallback otomatis ke OSM.
+// ================================================================
+const GOOGLE_MAPS_API_KEY = ''; // ← isi API key Google Maps Static di sini
 
 // Deteksi mode: jika di dalam iframe GAS, gunakan google.script.run
 const GAS_MODE = (typeof google !== 'undefined' && google.script && google.script.run);
@@ -700,20 +714,44 @@ async function apiCall_(data) {
       console.error('[apiCall_] GAS_WEBAPP_URL belum diisi');
       return { status: 'error', message: 'GAS_WEBAPP_URL belum diisi. Ganti PASTE_URL_WEB_APP_DISINI dengan URL Web App Anda.' };
     }
+    // Content-Type text/plain = hindari CORS preflight (OPTIONS).
+    // application/json memicu preflight yang sering gagal di GAS Web App.
+    // redirect:'follow' mengikuti 302 Google ke googleusercontent.com.
     console.log('[apiCall_] Menggunakan URL:', GAS_WEBAPP_URL);
     promise = fetch(GAS_WEBAPP_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify(data),
-      redirect: 'follow'
+      redirect: 'follow',
+      mode: 'cors',
+      credentials: 'omit'
     }).then(async function(r) {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      const result = await r.json();
+      const raw = await r.text();
+      if (!r.ok) {
+        throw new Error('HTTP ' + r.status + (raw ? (': ' + raw.substring(0, 120)) : ''));
+      }
+      if (!raw || !String(raw).trim()) {
+        return { status: 'error', message: 'Server tidak mengembalikan data (respon kosong). Redeploy Web App dengan akses "Anyone".' };
+      }
+      var result;
+      try {
+        result = JSON.parse(raw);
+      } catch (parseErr) {
+        // Kadang GAS mengembalikan HTML error page
+        console.error('[apiCall_ Fetch] JSON parse fail:', raw.substring(0, 200));
+        return { status: 'error', message: 'Respon server bukan JSON. Pastikan URL berakhiran /exec dan deployment aktif.' };
+      }
       if (!result) return { status: 'error', message: 'Server tidak mengembalikan data (respon kosong).' };
       return result;
     }).catch(function(err) {
       console.error('[apiCall_ Fetch]', data.action, ':', err.message || err);
-      return { status: 'error', message: 'Koneksi gagal: ' + (err.message || err) + '. Pastikan GAS Web App URL benar dan deploy sebagai "Siapa saja".' };
+      var msg = String(err.message || err);
+      if (/Failed to fetch|NetworkError|CORS|Load failed/i.test(msg)) {
+        msg = 'Koneksi/CORS gagal. Pastikan: (1) GAS Web App di-deploy "Anyone", (2) URL /exec benar, (3) frontend memakai text/plain. Detail: ' + msg;
+      } else {
+        msg = 'Koneksi gagal: ' + msg + '. Pastikan GAS Web App URL benar dan deploy sebagai "Siapa saja".';
+      }
+      return { status: 'error', message: msg };
     });
   }
 
@@ -748,6 +786,431 @@ function invalidateCache(actionPattern) {
   _cache.clear();
   _inflight.clear();
   console.log('[invalidateCache] Cache cleared at', new Date().toISOString());
+}
+
+/* ============================================================
+   HELPERS: Drive image URL + Peta Rute (OSM + Google Maps link)
+   ============================================================ */
+/** Ubah link Drive /view atau file id menjadi URL yang bisa dipakai di <img>. */
+function driveImgUrl(urlOrId) {
+  if (!urlOrId) return '';
+  var s = String(urlOrId).trim();
+  if (!s) return '';
+  // Sudah format uc?export=view atau lh3
+  if (/drive\.google\.com\/uc\?/.test(s) || /googleusercontent\.com/.test(s)) return s;
+  // Extract file id dari berbagai format Drive URL
+  var m = s.match(/\/d\/([a-zA-Z0-9_-]{10,})/) ||
+          s.match(/[?&]id=([a-zA-Z0-9_-]{10,})/) ||
+          s.match(/^([a-zA-Z0-9_-]{25,})$/);
+  if (m) return 'https://drive.google.com/uc?export=view&id=' + m[1];
+  return s;
+}
+
+/** Link buka di tab baru (halaman Drive), fallback ke view URL. */
+function driveOpenUrl(urlOrId) {
+  if (!urlOrId) return '';
+  var s = String(urlOrId).trim();
+  var m = s.match(/\/d\/([a-zA-Z0-9_-]{10,})/) ||
+          s.match(/[?&]id=([a-zA-Z0-9_-]{10,})/) ||
+          s.match(/^([a-zA-Z0-9_-]{25,})$/);
+  if (m) return 'https://drive.google.com/file/d/' + m[1] + '/view';
+  return s;
+}
+
+/**
+ * ============================================================
+ *  PETA OSM TEROPTIMASI
+ *  - Titik tunggal  : static map image (tanpa iframe, sangat cepat)
+ *  - Multi-stop     : 1 instance Leaflet (lazy-load saat terlihat)
+ *  - Leaflet CSS/JS : dimuat sekali, di-cache
+ *  - IntersectionObserver: peta tidak di-init sampai masuk viewport
+ * ============================================================
+ */
+var _leafletReady = null;
+var _leafletMaps = {}; // id -> L.map instance
+var _mapIdSeq = 0;
+
+function _nextMapId() {
+  _mapIdSeq += 1;
+  return 'mbg-map-' + _mapIdSeq + '-' + Date.now().toString(36);
+}
+
+/** Muat Leaflet sekali saja (CSS + JS). */
+function ensureLeaflet_() {
+  if (window.L) return Promise.resolve(window.L);
+  if (_leafletReady) return _leafletReady;
+  _leafletReady = new Promise(function(resolve, reject) {
+    // CSS
+    if (!document.getElementById('leaflet-css')) {
+      var link = document.createElement('link');
+      link.id = 'leaflet-css';
+      link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      link.crossOrigin = '';
+      document.head.appendChild(link);
+    }
+    // JS
+    var s = document.createElement('script');
+    s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    s.crossOrigin = '';
+    s.onload = function() { resolve(window.L); };
+    s.onerror = function() {
+      _leafletReady = null;
+      reject(new Error('Gagal memuat Leaflet'));
+    };
+    document.head.appendChild(s);
+  });
+  return _leafletReady;
+}
+
+/** Hancurkan semua instance peta (panggil sebelum ganti page content). */
+function destroyAllMaps() {
+  Object.keys(_leafletMaps).forEach(function(id) {
+    try { _leafletMaps[id].remove(); } catch (e) {}
+    delete _leafletMaps[id];
+  });
+}
+
+/**
+ * Static map image 1 titik — tanpa iframe, tanpa JS, lazy-load native.
+ * Sumber: staticmap.openstreetmap.de (gratis, no API key).
+ */
+function hasGoogleMapsKey() {
+  var k = (typeof GOOGLE_MAPS_API_KEY === 'string') ? GOOGLE_MAPS_API_KEY.trim() : '';
+  return !!(k && k !== 'YOUR_API_KEY' && k.length > 10);
+}
+
+/** Google Maps Static — 1 titik (scale=2 untuk retina). */
+function googleStaticUrl(lat, lng, w, h, zoom, label) {
+  lat = Number(lat); lng = Number(lng);
+  w = Math.min(640, Math.max(200, w || 600));
+  h = Math.min(640, Math.max(120, h || 200));
+  zoom = zoom || 15;
+  var lbl = String(label || '•').replace(/[^A-Za-z0-9]/g, '').charAt(0) || 'O';
+  var marker = 'color:0x1565C0|label:' + encodeURIComponent(lbl) + '|' + lat + ',' + lng;
+  return 'https://maps.googleapis.com/maps/api/staticmap'
+    + '?center=' + encodeURIComponent(lat + ',' + lng)
+    + '&zoom=' + zoom
+    + '&size=' + w + 'x' + h
+    + '&scale=2'
+    + '&maptype=roadmap'
+    + '&markers=' + marker
+    + '&key=' + encodeURIComponent(GOOGLE_MAPS_API_KEY.trim());
+}
+
+/**
+ * Google Maps Static multi-marker + path rute.
+ * points: [{lat,lng,label,isSppg,status}]
+ */
+function googleStaticRouteUrl(points, w, h) {
+  if (!points || !points.length) return '';
+  w = Math.min(640, Math.max(200, w || 600));
+  h = Math.min(640, Math.max(160, h || 240));
+  var qs = [
+    'size=' + w + 'x' + h,
+    'scale=2',
+    'maptype=roadmap'
+  ];
+  var pathCoords = [];
+  var stopIdx = 0;
+  points.forEach(function(p) {
+    var lat = Number(p.lat), lng = Number(p.lng);
+    if (isNaN(lat) || isNaN(lng)) return;
+    pathCoords.push(lat + ',' + lng);
+    var color, label;
+    if (p.isSppg) {
+      color = '0x1565C0'; label = 'S';
+    } else {
+      stopIdx += 1;
+      color = (String(p.status) === 'Selesai') ? '0x2E7D32' : '0xFF6F00';
+      label = String(stopIdx).charAt(0);
+    }
+    qs.push('markers=color:' + color + '|label:' + encodeURIComponent(label) + '|' + lat + ',' + lng);
+  });
+  if (pathCoords.length >= 2) {
+    qs.push('path=color:0x1565C0BB|weight:4|' + pathCoords.map(encodeURIComponent).join('|'));
+  }
+  qs.push('key=' + encodeURIComponent(GOOGLE_MAPS_API_KEY.trim()));
+  return 'https://maps.googleapis.com/maps/api/staticmap?' + qs.join('&');
+}
+
+/** OSM static fallback (tanpa API key). */
+function osmStaticUrl(lat, lng, w, h, zoom) {
+  lat = Number(lat); lng = Number(lng);
+  if (isNaN(lat) || isNaN(lng)) return '';
+  w = Math.min(800, Math.max(200, w || 600));
+  h = Math.min(400, Math.max(120, h || 200));
+  zoom = zoom || 15;
+  return 'https://staticmap.openstreetmap.de/staticmap.php?center=' +
+    encodeURIComponent(lat + ',' + lng) +
+    '&zoom=' + zoom +
+    '&size=' + w + 'x' + h +
+    '&maptype=mapnik&markers=' + encodeURIComponent(lat + ',' + lng + ',red-pushpin');
+}
+
+/** Provider: Google Static jika key ada, selain itu OSM. */
+function mapStaticUrl(lat, lng, w, h, zoom, label) {
+  lat = Number(lat); lng = Number(lng);
+  if (isNaN(lat) || isNaN(lng)) return '';
+  if (hasGoogleMapsKey()) return googleStaticUrl(lat, lng, w, h, zoom, label);
+  return osmStaticUrl(lat, lng, w, h, zoom);
+}
+
+/**
+ * Embed 1 titik: static image + link buka di OSM/Google.
+ * Jauh lebih ringan dibanding iframe OSM export.
+ */
+function mapEmbedSingle(lat, lng, height, label) {
+  lat = Number(lat); lng = Number(lng);
+  if (isNaN(lat) || isNaN(lng)) return '';
+  height = height || 160;
+  var w = 640;
+  var src = mapStaticUrl(lat, lng, w, height, 15, label);
+  var gmaps = 'https://www.google.com/maps?q=' + encodeURIComponent(lat + ',' + lng);
+  var osm = 'https://www.openstreetmap.org/?mlat=' + lat + '&mlon=' + lng + '#map=16/' + lat + '/' + lng;
+  var provider = hasGoogleMapsKey() ? 'Google' : 'OSM';
+  var providerBg = hasGoogleMapsKey() ? 'rgba(21,101,192,.92)' : 'rgba(46,125,50,.92)';
+  return '<div class="mbg-map-static" style="border-radius:12px;overflow:hidden;border:1.5px solid #E0E0E0;position:relative;background:#E8EEF5;min-height:'+height+'px">'+
+    '<a href="'+gmaps+'" target="_blank" rel="noopener" title="Buka di Google Maps" style="display:block;line-height:0">'+
+    '<img src="'+src+'" alt="Peta lokasi" width="'+w+'" height="'+height+'" '+
+    'style="width:100%;height:'+height+'px;object-fit:cover;display:block;background:#E8EEF5" '+
+    'loading="lazy" decoding="async" '+
+    'onerror="this.onerror=null;this.src=\'\';this.style.display=\'none\';var f=this.parentNode;if(f)f.insertAdjacentHTML(\'beforeend\',\'<div style=padding:24px;text-align:center;color:#6B7280;font-size:12px>Peta tidak tersedia — cek API key / koneksi</div>\')">'+
+    '</a>'+
+    '<div style="position:absolute;left:8px;top:8px;background:'+providerBg+';color:#fff;font-size:9px;font-weight:800;padding:3px 7px;border-radius:6px;letter-spacing:.3px">'+provider+'</div>'+
+    '<div style="position:absolute;right:8px;bottom:8px;display:flex;gap:6px">'+
+    '<a href="'+gmaps+'" target="_blank" rel="noopener" style="background:rgba(21,101,192,.92);color:#fff;font-size:10px;font-weight:700;padding:5px 8px;border-radius:8px;text-decoration:none">Google</a>'+
+    '<a href="'+osm+'" target="_blank" rel="noopener" style="background:rgba(46,125,50,.92);color:#fff;font-size:10px;font-weight:700;padding:5px 8px;border-radius:8px;text-decoration:none">OSM</a>'+
+    '</div></div>';
+}
+
+/** Static multi-marker route card image (Google) atau Leaflet (tanpa key). */
+function mapRouteVisual(points, height) {
+  height = height || 240;
+  if (!points || !points.length) return '';
+  if (points.length === 1) {
+    return mapEmbedSingle(points[0].lat, points[0].lng, height, points[0].isSppg ? 'S' : '1');
+  }
+  // Dengan Google key: 1 request static multi-marker (paling cepat)
+  if (hasGoogleMapsKey()) {
+    var w = 640;
+    var src = googleStaticRouteUrl(points, w, height);
+    var origin = points[0].lat + ',' + points[0].lng;
+    var dest = points[points.length-1].lat + ',' + points[points.length-1].lng;
+    var mid = points.slice(1,-1).map(function(p){return p.lat+','+p.lng;}).join('|');
+    var gmapsDir = 'https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(origin)+
+      '&destination='+encodeURIComponent(dest)+(mid?'&waypoints='+encodeURIComponent(mid):'')+'&travelmode=driving';
+    return '<div class="mbg-map-static" style="border-radius:12px;overflow:hidden;border:1.5px solid #E0E0E0;position:relative;background:#E8EEF5;min-height:'+height+'px">'+
+      '<a href="'+gmapsDir+'" target="_blank" rel="noopener" style="display:block;line-height:0">'+
+      '<img src="'+src+'" alt="Peta rute" width="'+w+'" height="'+height+'" '+
+      'style="width:100%;height:'+height+'px;object-fit:cover;display:block;background:#E8EEF5" '+
+      'loading="lazy" decoding="async" '+
+      'onerror="this.onerror=null;this.style.display=\'none\';var f=this.parentNode;if(f)f.insertAdjacentHTML(\'beforeend\',\'<div style=padding:20px;text-align:center;color:#6B7280;font-size:12px>Gagal memuat Google Static Map</div>\')">'+
+      '</a>'+
+      '<div style="position:absolute;left:8px;top:8px;background:rgba(21,101,192,.92);color:#fff;font-size:9px;font-weight:800;padding:3px 7px;border-radius:6px">Google Static</div>'+
+      '</div>';
+  }
+  // Tanpa key: Leaflet interaktif (lazy)
+  return mapLeafletContainer(points, height);
+}
+
+function mapLeafletContainer(points, height) {
+  height = height || 240;
+  if (!points || !points.length) return '';
+  var id = _nextMapId();
+  var payload = JSON.stringify(points.map(function(p) {
+    return {
+      lat: Number(p.lat), lng: Number(p.lng),
+      label: String(p.label || ''),
+      status: String(p.status || ''),
+      isSppg: !!p.isSppg
+    };
+  }));
+  // Escape for HTML attribute
+  var safePayload = payload.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+  return '<div class="mbg-leaflet-wrap" style="border-radius:12px;overflow:hidden;border:1.5px solid #E0E0E0;position:relative;background:linear-gradient(135deg,#E3F2FD,#EEF1F5);min-height:'+height+'px">'+
+    '<div id="'+id+'" class="mbg-leaflet" data-points="'+safePayload+'" style="width:100%;height:'+height+'px">'+
+    '<div class="mbg-map-skeleton" style="display:flex;align-items:center;justify-content:center;height:100%;color:#6B7280;font-size:12px;gap:8px">'+
+    '<div class="tw-spinner" style="width:28px;height:28px;border-width:3px"></div> Memuat peta...</div>'+
+    '</div></div>';
+}
+
+/** Init semua .mbg-leaflet yang terlihat (IntersectionObserver). */
+function initVisibleMaps() {
+  var nodes = document.querySelectorAll('.mbg-leaflet:not([data-inited])');
+  if (!nodes.length) return;
+  var io = window._mbgMapIO;
+  if (!io) {
+    io = window._mbgMapIO = new IntersectionObserver(function(entries) {
+      entries.forEach(function(en) {
+        if (!en.isIntersecting) return;
+        var el = en.target;
+        if (el.getAttribute('data-inited')) return;
+        el.setAttribute('data-inited', '1');
+        io.unobserve(el);
+        _initOneLeaflet(el);
+      });
+    }, { rootMargin: '120px 0px', threshold: 0.05 });
+  }
+  nodes.forEach(function(n) { io.observe(n); });
+}
+
+function _initOneLeaflet(el) {
+  var raw = el.getAttribute('data-points') || '[]';
+  var points;
+  try { points = JSON.parse(raw); } catch (e) { points = []; }
+  points = (points || []).filter(function(p) { return !isNaN(p.lat) && !isNaN(p.lng); });
+  if (!points.length) {
+    el.innerHTML = '<div style="padding:20px;text-align:center;color:#6B7280;font-size:12px">Tidak ada koordinat</div>';
+    return;
+  }
+  ensureLeaflet_().then(function(L) {
+    // Clear skeleton
+    el.innerHTML = '';
+    var map = L.map(el, {
+      zoomControl: true,
+      attributionControl: true,
+      scrollWheelZoom: false, // hindari hijack scroll di mobile
+      dragging: true,
+      tap: true
+    });
+    // Tile layer — OSM standard, retinascale via detectRetina
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+      updateWhenIdle: true,
+      keepBuffer: 1
+    }).addTo(map);
+
+    var bounds = [];
+    points.forEach(function(p, i) {
+      var isSppg = !!p.isSppg;
+      var isDone = String(p.status) === 'Selesai';
+      var color = isSppg ? '#1565C0' : (isDone ? '#2E7D32' : '#FF6F00');
+      var label = isSppg ? 'S' : String(i);
+      var icon = L.divIcon({
+        className: 'mbg-pin',
+        html: '<div style="width:28px;height:28px;border-radius:50%;background:'+color+';color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.25)">'+label+'</div>',
+        iconSize: [28, 28],
+        iconAnchor: [14, 14]
+      });
+      var m = L.marker([p.lat, p.lng], { icon: icon }).addTo(map);
+      if (p.label) {
+        m.bindPopup('<b>'+String(p.label).replace(/</g,'&lt;')+'</b>' +
+          (p.status ? '<br><span style="font-size:11px;color:#6B7280">'+String(p.status).replace(/</g,'&lt;')+'</span>' : ''));
+      }
+      bounds.push([p.lat, p.lng]);
+    });
+
+    // Polyline rute sederhana (urutan stop)
+    if (bounds.length >= 2) {
+      L.polyline(bounds, { color: '#1565C0', weight: 3, opacity: 0.7, dashArray: '6 8' }).addTo(map);
+    }
+    if (bounds.length === 1) {
+      map.setView(bounds[0], 15);
+    } else {
+      map.fitBounds(bounds, { padding: [28, 28], maxZoom: 15 });
+    }
+    // Fix ukuran setelah layout
+    setTimeout(function() { try { map.invalidateSize(); } catch (e) {} }, 80);
+    setTimeout(function() { try { map.invalidateSize(); } catch (e) {} }, 300);
+
+    _leafletMaps[el.id] = map;
+  }).catch(function() {
+    // Fallback: static map titik pertama
+    var p = points[0];
+    el.innerHTML = mapEmbedSingle(p.lat, p.lng, el.clientHeight || 200);
+  });
+}
+
+/**
+ * Kartu peta rute multi-stop (performa tinggi):
+ * - Tombol Google Maps Directions
+ * - 1 Leaflet multi-marker (lazy)
+ * - Timeline ringkas
+ */
+function buildRouteMapCard(titleIconHtml, title, sppgLat, sppgLng, sppgNama, stops, opts) {
+  opts = opts || {};
+  var height = opts.height || 220;
+  var points = [];
+  if (sppgLat != null && sppgLng != null && !isNaN(Number(sppgLat)) && !isNaN(Number(sppgLng))) {
+    points.push({ lat: Number(sppgLat), lng: Number(sppgLng), label: sppgNama || 'SPPG', isSppg: true });
+  }
+  (stops || []).forEach(function(s) {
+    var la = Number(s.lat != null ? s.lat : s.LatAntar);
+    var ln = Number(s.lng != null ? s.lng : s.LngAntar);
+    if (isNaN(la) || isNaN(ln)) return;
+    points.push({
+      lat: la, lng: ln,
+      label: s.label || s.Instansi || s.instansi || 'Stop',
+      status: s.status || s.Status || '',
+      waktu: s.waktu || s.WaktuAntar || '',
+      waktuJemput: s.waktuJemput || s.WaktuJemput || ''
+    });
+  });
+  var stopCount = points.filter(function(p){ return !p.isSppg; }).length;
+  var html = '<div class="tw-card animate-fadeUp"><h2>'+titleIconHtml+' '+title+
+    (stopCount ? ' <span class="tw-badge">'+stopCount+' titik</span>' : '')+'</h2>';
+  if (points.length < 1) {
+    html += '<div class="tw-empty"><i data-lucide="map-pin-off" class="icon-lg empty-icon"></i><br>Belum ada koordinat untuk ditampilkan.<br>'+
+      '<span style="color:#6B7280;font-size:12px">Aktifkan GPS saat foto bukti, atau isi Lat/Lng instansi di Master Instansi.</span></div></div>';
+    return html;
+  }
+  var origin = points[0].lat + ',' + points[0].lng;
+  var dest = points[points.length - 1].lat + ',' + points[points.length - 1].lng;
+  var mid = points.slice(1, -1).map(function(p){ return p.lat + ',' + p.lng; }).join('|');
+  var gmapsDir = 'https://www.google.com/maps/dir/?api=1&origin=' + encodeURIComponent(origin) +
+    '&destination=' + encodeURIComponent(dest) +
+    (mid ? '&waypoints=' + encodeURIComponent(mid) : '') +
+    '&travelmode=driving';
+  html += '<a class="tw-btn tw-btn-primary tw-btn-block" href="'+gmapsDir+'" target="_blank" rel="noopener" style="margin-bottom:10px">'+
+    '<i data-lucide="navigation" class="icon-md"></i> Buka Rute di Google Maps</a>';
+
+  // Google Static multi-marker (jika key) / Leaflet (fallback) / static 1 titik
+  html += mapRouteVisual(points, height);
+
+  // Timeline ringkas
+  html += '<div style="margin-top:12px;padding:12px;background:linear-gradient(135deg,#F0F7FF,#E3F2FD);border-radius:12px">';
+  html += '<div style="font-size:12px;font-weight:800;color:#0D47A1;margin-bottom:8px;display:flex;align-items:center;gap:5px">'+
+    '<i data-lucide="route" class="icon-sm"></i> Alur Perjalanan</div>';
+  points.forEach(function(p, i) {
+    var isSppg = !!p.isSppg;
+    var isDone = String(p.status) === 'Selesai';
+    var bg = isSppg ? 'background:linear-gradient(135deg,#0D47A1,#1565C0)' :
+             (isDone ? 'background:linear-gradient(135deg,#2E7D32,#43A047)' : 'background:linear-gradient(135deg,#FF6F00,#E65100)');
+    var num = isSppg ? 'S' : String(i);
+    html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px">';
+    html += '<div style="width:22px;height:22px;border-radius:50%;'+bg+';color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;flex:none">'+num+'</div>';
+    html += '<div style="flex:1;min-width:0"><div style="font-weight:700;color:#0D47A1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escapeHTML(p.label)+'</div>';
+    if (!isSppg) {
+      html += '<div style="color:#6B7280;font-size:10.5px">';
+      if (p.waktu) html += 'Antar: ' + (typeof fmtTime==='function' ? fmtTime(p.waktu) : p.waktu);
+      if (isDone && p.waktuJemput) html += ' &rarr; Jemput: ' + (typeof fmtTime==='function' ? fmtTime(p.waktuJemput) : p.waktuJemput);
+      html += '</div>';
+    } else {
+      html += '<div style="color:#6B7280;font-size:10.5px">Titik awal</div>';
+    }
+    html += '</div>';
+    if (!isSppg && p.status) {
+      html += '<span class="tw-tag '+(isDone?'success':'warning')+'" style="flex:none;font-size:9px">'+escapeHTML(p.status)+'</span>';
+    }
+    html += '</div>';
+  });
+  html += '</div></div>';
+  // Jadwalkan init peta setelah HTML masuk DOM
+  setTimeout(function(){ try { initVisibleMaps(); } catch(e){} }, 30);
+  return html;
+}
+
+function fotoThumbHtml(url, label, size) {
+  if (!url) return '';
+  size = size || 65;
+  var img = driveImgUrl(url);
+  var open = driveOpenUrl(url);
+  return '<a href="'+escapeAttr(open)+'" target="_blank" rel="noopener" style="width:'+size+'px;height:'+size+'px;border-radius:8px;overflow:hidden;border:1.5px solid #E0E0E0;display:block;position:relative">'+
+    '<img src="'+escapeAttr(img)+'" alt="'+escapeAttr(label||'foto')+'" style="width:100%;height:100%;object-fit:cover" loading="lazy" onerror="this.style.display=\'none\'">'+
+    (label ? '<span style="position:absolute;bottom:1px;left:1px;background:rgba(0,0,0,.65);color:#fff;font-size:8px;padding:1px 4px;border-radius:3px">'+escapeHTML(label)+'</span>' : '')+
+    '</a>';
 }
 
 function togglePasswordVisibility(inputId, btn){
@@ -790,7 +1253,13 @@ function escapeHTML(s){return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','
 function escapeAttr(s){return escapeHTML(s).replace(/'/g,'&#39;')}
 function openModal(id){document.getElementById(id).classList.add('show');refreshIcons()}
 function closeModal(id){document.getElementById(id).classList.remove('show')}
-function setContent(html){document.getElementById('pageContent').innerHTML=html;refreshIcons()}
+function setContent(html){
+  try{destroyAllMaps();}catch(e){}
+  document.getElementById('pageContent').innerHTML=html;
+  refreshIcons();
+  // Init peta Leaflet yang baru masuk DOM (lazy via IntersectionObserver)
+  setTimeout(function(){ try{initVisibleMaps();}catch(e){} }, 40);
+}
 
 /* ============================================================
    LOGIN / LOGOUT
@@ -942,56 +1411,28 @@ function renderDriverDashboard(){
       (tugasList.length===0?'<span class="tw-tag purple" style="font-size:12px">Belum ada tugas</span>':'')+
       '</div></div>';
 
-    // Peta Rute Hari Ini: SPPG → Instansi berurutan dengan waktu
+    // Peta Rute Hari Ini: SPPG → Instansi (OSM embed + link Google Maps)
     const todayPoints = distList.filter(function(d){return d.LatAntar && d.LngAntar;});
-    if(todayPoints.length){
-      // Urutkan berdasarkan Sesi/WaktuAntar
-      todayPoints.sort(function(a,b){ return Number(a.Sesi)-Number(b.Sesi) || new Date(a.WaktuAntar)-new Date(b.WaktuAntar); });
-      // Buat URL directions: SPPG → stop1 → stop2 → ...
-      const waypoints = [sppgLat+','+sppgLng];
-      todayPoints.forEach(function(d){ waypoints.push(encodeURIComponent(d.LatAntar)+','+encodeURIComponent(d.LngAntar)); });
-      const dirUrl = 'https://maps.google.com/maps/dir/'+waypoints.join('/')+'?output=embed&z=13';
-      html+='<div class="tw-card animate-fadeUp"><h2><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0D47A1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg> Peta Rute Distribusi Hari Ini</h2>';
-      html+='<div style="border-radius:14px;overflow:hidden;border:1.5px solid #E0E0E0">';
-      html+='<iframe width="100%" height="280" frameborder="0" style="border:0" src="'+dirUrl+'" allowfullscreen></iframe></div>';
-      // Timeline rute dengan waktu
-      html+='<div style="margin-top:14px;padding:12px;background:linear-gradient(135deg,#F0F7FF,#E3F2FD);border-radius:12px">';
-      html+='<div style="font-size:12px;font-weight:800;color:#0D47A1;margin-bottom:8px;display:flex;align-items:center;gap:5px"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0D47A1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Alur Perjalanan</div>';
-      // Titik awal SPPG
-      html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px">';
-      html+='<div style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,#0D47A1,#1565C0);color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;flex:none">S</div>';
-      html+='<span style="font-weight:700;color:#0D47A1">'+escapeHTML(sppgNama)+'</span>';
-      html+='<span style="color:#6B7280;margin-left:auto">Titik awal</span>';
-      html+='</div>';
-      // Setiap stop
-      todayPoints.forEach(function(d,i){
-        const isSelesai = d.Status==='Selesai';
-        const dotBg = isSelesai ? 'background:linear-gradient(135deg,#2E7D32,#43A047)' : 'background:linear-gradient(135deg,#FF6F00,#E65100)';
-        html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px">';
-        html+='<div style="width:22px;height:22px;border-radius:50%;'+dotBg+';color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;flex:none">'+(i+1)+'</div>';
-        html+='<div style="flex:1;min-width:0">';
-        html+='<div style="font-weight:700;color:#0D47A1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escapeHTML(d.Instansi)+'</div>';
-        html+='<div style="color:#6B7280;font-size:10.5px">Antar: '+(d.WaktuAntar?fmtTime(d.WaktuAntar):'-')+(isSelesai?' &rarr; Jemput: '+fmtTime(d.WaktuJemput):'')+'</div>';
-        html+='</div>';
-        html+='<span class="tw-tag '+(isSelesai?'success':'warning')+'" style="flex:none;font-size:9px">'+escapeHTML(d.Status)+'</span>';
-        html+='</div>';
-      });
-      html+='</div></div>';
-    } else if (distList.length) {
-      html+='<div class="tw-card animate-fadeUp"><h2><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0D47A1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg> Peta Rute Distribusi Hari Ini</h2>'+
-        '<div class="tw-empty"><i data-lucide="map-pin-off" class="icon-lg empty-icon"></i><br>Lokasi belum tercatat untuk pengiriman hari ini.<br><span style="color:#6B7280;font-size:12px">Pastikan izin lokasi (GPS) diaktifkan saat mengambil foto bukti antar. Admin juga bisa mengisi koordinat instansi di menu Master Instansi sebagai cadangan.</span></div></div>';
-    }
+    todayPoints.sort(function(a,b){ return Number(a.Sesi)-Number(b.Sesi) || new Date(a.WaktuAntar)-new Date(b.WaktuAntar); });
+    html += buildRouteMapCard(
+      '<i data-lucide="map" class="icon-md"></i>',
+      'Peta Rute Distribusi Hari Ini',
+      sppgLat, sppgLng, sppgNama,
+      todayPoints.map(function(d){ return { lat:d.LatAntar, lng:d.LngAntar, label:d.Instansi, status:d.Status, waktu:d.WaktuAntar, waktuJemput:d.WaktuJemput }; }),
+      { height: 240 }
+    );
 
-    // Peta minggu ini
+    // Peta minggu ini (titik-titik)
     const weekDistData = week.data || [];
     const weekPoints = weekDistData.filter(function(d){return d.LatAntar && d.LngAntar;});
     if(weekPoints.length){
-      const weekMapMarkers = weekPoints.map(function(d){
-        return encodeURIComponent(d.LatAntar)+','+encodeURIComponent(d.LngAntar);
-      }).join('|');
-      html+='<div class="tw-card animate-fadeUp"><h2><i data-lucide="map-pin" class="icon-md"></i> Peta Minggu Ini <span class="tw-badge">'+weekPoints.length+' titik</span></h2>'+
-        '<div style="border-radius:14px;overflow:hidden;border:1.5px solid #E0E0E0">'+
-        '<iframe width="100%" height="250" frameborder="0" style="border:0" src="https://maps.google.com/maps?q='+weekMapMarkers+'&z=12&output=embed" allowfullscreen></iframe></div></div>';
+      html += buildRouteMapCard(
+        '<i data-lucide="map-pin" class="icon-md"></i>',
+        'Peta Minggu Ini',
+        sppgLat, sppgLng, sppgNama,
+        weekPoints.map(function(d){ return { lat:d.LatAntar, lng:d.LngAntar, label:d.Instansi, status:d.Status, waktu:d.WaktuAntar, waktuJemput:d.WaktuJemput }; }),
+        { height: 220 }
+      );
     }
 
     // Detail distribusi hari ini (dengan foto)
@@ -1006,8 +1447,8 @@ function renderDriverDashboard(){
           '<div style="font-size:11px;color:#6B7280">PK '+d.PK+' / PB '+d.PB+' &middot; '+fmtTime(d.WaktuAntar)+(isSelesai?' &rarr; '+fmtTime(d.WaktuJemput):'')+'</div>'+
           // Mini foto thumbnails
           '<div style="display:flex;gap:4px;margin-top:4px">'+
-          (d.FotoAntar_Url?'<a href="'+escapeAttr(d.FotoAntar_Url)+'" target="_blank" style="width:36px;height:36px;border-radius:6px;overflow:hidden;border:1px solid #E0E0E0;display:block"><img src="'+escapeAttr(d.FotoAntar_Url)+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'"></a>':'')+
-          (d.FotoJemput_Url?'<a href="'+escapeAttr(d.FotoJemput_Url)+'" target="_blank" style="width:36px;height:36px;border-radius:6px;overflow:hidden;border:1px solid #E0E0E0;display:block"><img src="'+escapeAttr(d.FotoJemput_Url)+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'"></a>':'')+
+          (d.FotoAntar_Url?'<a href="'+escapeAttr(driveImgUrl(d.FotoAntar_Url))+'" target="_blank" style="width:36px;height:36px;border-radius:6px;overflow:hidden;border:1px solid #E0E0E0;display:block"><img src="'+escapeAttr(driveImgUrl(d.FotoAntar_Url))+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'"></a>':'')+
+          (d.FotoJemput_Url?'<a href="'+escapeAttr(driveImgUrl(d.FotoJemput_Url))+'" target="_blank" style="width:36px;height:36px;border-radius:6px;overflow:hidden;border:1px solid #E0E0E0;display:block"><img src="'+escapeAttr(driveImgUrl(d.FotoJemput_Url))+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'"></a>':'')+
           '</div></div>'+
           '<span class="tw-tag '+(isSelesai?'success':'warning')+'" style="flex:none">'+escapeHTML(d.Status)+'</span></div>';
       });
@@ -1123,8 +1564,8 @@ function renderPengiriman(){
           '<div style="font-size:12px;color:#9AA4B2;margin-top:4px">PIC: '+escapeHTML(t.PIC||'-')+' &middot; PK '+t.PK+' / PB '+t.PB+' &middot; Total '+t.Total+'</div>'+
           (waktuAntar?'<div style="font-size:11px;color:#6B7280;margin-top:2px">Waktu Antar: '+fmtTime(waktuAntar)+'</div>':'')+
           // Foto bukti antar
-          (fotoAntar?'<div style="margin-top:8px"><a href="'+escapeAttr(fotoAntar)+'" target="_blank" style="width:70px;height:70px;border-radius:10px;overflow:hidden;border:1.5px solid #C8E6C9;display:inline-block;position:relative">'+
-            '<img src="'+escapeAttr(fotoAntar)+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'+
+          (fotoAntar?'<div style="margin-top:8px"><a href="'+escapeAttr(driveImgUrl(fotoAntar))+'" target="_blank" style="width:70px;height:70px;border-radius:10px;overflow:hidden;border:1.5px solid #C8E6C9;display:inline-block;position:relative">'+
+            '<img src="'+escapeAttr(driveImgUrl(fotoAntar))+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'+
             '<span style="position:absolute;bottom:2px;left:2px;background:rgba(46,125,50,.8);color:#fff;font-size:8px;padding:1px 5px;border-radius:4px">Bukti Antar</span></a></div>':'')+
           '</div>';
       });
@@ -1232,7 +1673,7 @@ function submitPengiriman(){
       NoPol:currentUser.driverData.NoPol, NamaDriver:currentUser.driverData.NamaDriver,
       ID_Instansi:idInstansi, Instansi:ins?ins.Instansi:'', PIC:document.getElementById('dPIC').value,
       PK:document.getElementById('dPK').value, PB:document.getElementById('dPB').value,
-      WaktuAntar:new Date().toISOString(), FotoAntar_Url:fotoRes.url, LatAntar:window._latAntar||'', LngAntar:window._lngAntar||'',
+      WaktuAntar:new Date().toISOString(), FotoAntar_Url:(fotoRes.viewUrl||fotoRes.url), LatAntar:window._latAntar||'', LngAntar:window._lngAntar||'',
       Status:'Antar', Catatan:document.getElementById('dCatatan').value
     });
   }).then(res=>{
@@ -1293,33 +1734,15 @@ function renderPengambilan(){
     let html='';
 
     // --- Peta Rute Pengambilan (SPPG → lokasi pengambilan) ---
-    html+='<div class="tw-card animate-fadeUp"><h2><i data-lucide="map" class="icon-md"></i> Peta Rute Pengambilan Hari Ini</h2>';
-    if(pickupPoints.length){
-      const waypoints = [sppgLat+','+sppgLng];
-      pickupPoints.forEach(function(d){ waypoints.push(encodeURIComponent(d.LatAntar)+','+encodeURIComponent(d.LngAntar)); });
-      const dirUrl = 'https://maps.google.com/maps/dir/'+waypoints.join('/')+'?output=embed&z=13';
-      html+='<div style="border-radius:14px;overflow:hidden;border:1.5px solid #E0E0E0">';
-      html+='<iframe width="100%" height="250" frameborder="0" style="border:0" src="'+dirUrl+'" allowfullscreen></iframe></div>';
-      html+='<div style="margin-top:12px;padding:10px;background:linear-gradient(135deg,#F0F7FF,#E3F2FD);border-radius:12px">';
-      html+='<div style="font-size:11px;font-weight:800;color:#0D47A1;margin-bottom:6px;display:flex;align-items:center;gap:4px"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0D47A1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Alur Pengambilan</div>';
-      html+='<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:11px">';
-      html+='<div style="width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,#0D47A1,#1565C0);color:#fff;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;flex:none">S</div>';
-      html+='<span style="font-weight:700;color:#0D47A1">'+escapeHTML(sppgNama)+'</span>';
-      html+='<span style="color:#6B7280;margin-left:auto;font-size:10px">Titik awal</span></div>';
-      pickupPoints.forEach(function(d,i){
-        const isDone = d.Status==='Selesai';
-        const dotBg = isDone ? 'background:linear-gradient(135deg,#2E7D32,#43A047)' : 'background:linear-gradient(135deg,#FF6F00,#E65100)';
-        html+='<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:11px">';
-        html+='<div style="width:20px;height:20px;border-radius:50%;'+dotBg+';color:#fff;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;flex:none">'+(i+1)+'</div>';
-        html+='<div style="flex:1;min-width:0"><div style="font-weight:700;color:#0D47A1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escapeHTML(d.Instansi)+'</div>';
-        html+='<div style="color:#6B7280;font-size:10px">Antar: '+(d.WaktuAntar?fmtTime(d.WaktuAntar):'-')+(isDone?' &rarr; Jemput: '+fmtTime(d.WaktuJemput):'')+'</div></div>';
-        html+='<span class="tw-tag '+(isDone?'success':'warning')+'" style="flex:none;font-size:9px">'+escapeHTML(d.Status)+'</span></div>';
-      });
-      html+='</div>';
-    } else {
-      html+='<div class="tw-empty"><i data-lucide="map-pin-off" class="icon-lg empty-icon"></i><br>Belum ada lokasi pengambilan hari ini.</div>';
-    }
-    html+='</div>';
+    html += buildRouteMapCard(
+      '<i data-lucide="map" class="icon-md"></i>',
+      'Peta Rute Pengambilan Hari Ini',
+      sppgLat, sppgLng, sppgNama,
+      pickupPoints.map(function(d){
+        return { lat:d.LatAntar, lng:d.LngAntar, label:d.Instansi, status:d.Status, waktu:d.WaktuAntar, waktuJemput:d.WaktuJemput };
+      }),
+      { height: 230 }
+    );
 
     // --- Progres Pengambilan ---
     const totalPickup = antarList.length + selesaiList.length;
@@ -1341,8 +1764,8 @@ function renderPengambilan(){
           '<div style="display:flex;justify-content:space-between;align-items:center"><b style="color:#0D47A1;font-size:13.5px">'+escapeHTML(d.Instansi)+'</b><span class="tw-tag warning">Sesi '+d.Sesi+'</span></div>'+
           '<div style="font-size:12px;color:#6B7280;margin-top:4px">PIC: '+escapeHTML(d.PIC||'-')+' &middot; PK '+d.PK+' / PB '+d.PB+' &middot; Total '+d.Total+'</div>'+
           '<div style="font-size:11.5px;color:#6B7280;margin-top:2px">Waktu Antar: '+fmtTime(d.WaktuAntar)+'</div>'+
-          (d.FotoAntar_Url?'<div style="margin-top:6px"><a href="'+escapeAttr(d.FotoAntar_Url)+'" target="_blank" onclick="event.stopPropagation()" style="width:60px;height:60px;border-radius:8px;overflow:hidden;border:1.5px solid #FFCC80;display:inline-block;position:relative">'+
-            '<img src="'+escapeAttr(d.FotoAntar_Url)+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'+
+          (d.FotoAntar_Url?'<div style="margin-top:6px"><a href="'+escapeAttr(driveImgUrl(d.FotoAntar_Url))+'" target="_blank" onclick="event.stopPropagation()" style="width:60px;height:60px;border-radius:8px;overflow:hidden;border:1.5px solid #FFCC80;display:inline-block;position:relative">'+
+            '<img src="'+escapeAttr(driveImgUrl(d.FotoAntar_Url))+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'+
             '<span style="position:absolute;bottom:1px;left:1px;background:rgba(230,81,0,.75);color:#fff;font-size:8px;padding:1px 4px;border-radius:3px">Foto Antar</span></a></div>':'')+
           '<div style="font-size:11.5px;color:#1565C0;margin-top:6px;font-weight:700"><i data-lucide="camera" class="icon-sm"></i> Ketuk untuk proses pengambilan</div></div>';
       });
@@ -1361,11 +1784,11 @@ function renderPengambilan(){
           '<div style="font-size:12px;color:#6B7280;margin-top:4px">PK '+d.PK+' / PB '+d.PB+' &middot; Total '+d.Total+'</div>'+
           '<div style="font-size:11.5px;color:#6B7280;margin-top:2px">Antar: '+fmtTime(d.WaktuAntar)+' &rarr; Jemput: '+fmtTime(d.WaktuJemput)+'</div>'+
           '<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">'+
-          (d.FotoAntar_Url?'<a href="'+escapeAttr(d.FotoAntar_Url)+'" target="_blank" style="width:65px;height:65px;border-radius:8px;overflow:hidden;border:1.5px solid #C8E6C9;display:block;position:relative">'+
-            '<img src="'+escapeAttr(d.FotoAntar_Url)+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'+
+          (d.FotoAntar_Url?'<a href="'+escapeAttr(driveImgUrl(d.FotoAntar_Url))+'" target="_blank" style="width:65px;height:65px;border-radius:8px;overflow:hidden;border:1.5px solid #C8E6C9;display:block;position:relative">'+
+            '<img src="'+escapeAttr(driveImgUrl(d.FotoAntar_Url))+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'+
             '<span style="position:absolute;bottom:1px;left:1px;background:rgba(46,125,50,.75);color:#fff;font-size:8px;padding:1px 4px;border-radius:3px">Antar</span></a>':'')+
-          (d.FotoJemput_Url?'<a href="'+escapeAttr(d.FotoJemput_Url)+'" target="_blank" style="width:65px;height:65px;border-radius:8px;overflow:hidden;border:1.5px solid #C8E6C9;display:block;position:relative">'+
-            '<img src="'+escapeAttr(d.FotoJemput_Url)+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'+
+          (d.FotoJemput_Url?'<a href="'+escapeAttr(driveImgUrl(d.FotoJemput_Url))+'" target="_blank" style="width:65px;height:65px;border-radius:8px;overflow:hidden;border:1.5px solid #C8E6C9;display:block;position:relative">'+
+            '<img src="'+escapeAttr(driveImgUrl(d.FotoJemput_Url))+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'+
             '<span style="position:absolute;bottom:1px;left:1px;background:rgba(46,125,50,.75);color:#fff;font-size:8px;padding:1px 4px;border-radius:3px">Jemput</span></a>':'')+
           '</div></div>';
       });
@@ -1428,7 +1851,7 @@ function submitPengambilan(){
     return apiCall_({action:'saveDistribusi', ID_Distribusi:selectedPengambilanId, forceUpdate:true,
       Tanggal:todayStr(), NoPol:currentUser.driverData.NoPol,
       PK:jPK, PB:jPB,
-      WaktuJemput:new Date().toISOString(), FotoJemput_Url:fotoRes.url, LatJemput:window._latJemput||'', LngJemput:window._lngJemput||'',
+      WaktuJemput:new Date().toISOString(), FotoJemput_Url:(fotoRes.viewUrl||fotoRes.url), LatJemput:window._latJemput||'', LngJemput:window._lngJemput||'',
       Status:'Selesai', Catatan:document.getElementById('jCatatan').value
     });
   }).then(res=>{
@@ -1498,8 +1921,8 @@ function loadRiwayat(){
         '</div>'+
         // Foto thumbnails
         '<div style="display:flex;gap:8px;margin-top:8px">'+
-        (d.FotoAntar_Url?'<a href="'+escapeAttr(d.FotoAntar_Url)+'" target="_blank" style="width:60px;height:60px;border-radius:10px;overflow:hidden;border:1.5px solid #E0E0E0;display:block"><img src="'+escapeAttr(d.FotoAntar_Url)+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'"></a>':'')+
-        (d.FotoJemput_Url?'<a href="'+escapeAttr(d.FotoJemput_Url)+'" target="_blank" style="width:60px;height:60px;border-radius:10px;overflow:hidden;border:1.5px solid #E0E0E0;display:block"><img src="'+escapeAttr(d.FotoJemput_Url)+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'"></a>':'')+
+        (d.FotoAntar_Url?'<a href="'+escapeAttr(driveImgUrl(d.FotoAntar_Url))+'" target="_blank" style="width:60px;height:60px;border-radius:10px;overflow:hidden;border:1.5px solid #E0E0E0;display:block"><img src="'+escapeAttr(driveImgUrl(d.FotoAntar_Url))+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'"></a>':'')+
+        (d.FotoJemput_Url?'<a href="'+escapeAttr(driveImgUrl(d.FotoJemput_Url))+'" target="_blank" style="width:60px;height:60px;border-radius:10px;overflow:hidden;border:1.5px solid #E0E0E0;display:block"><img src="'+escapeAttr(driveImgUrl(d.FotoJemput_Url))+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'"></a>':'')+
         '</div></div>';
     });
 
@@ -1624,11 +2047,14 @@ function renderAdminDashboard(){
         // Peta rute: SPPG → semua stop berurutan
         const routeStops=drv.items.filter(function(d){return d.LatAntar&&d.LngAntar;}).sort(function(a,b){return Number(a.Sesi)-Number(b.Sesi)||new Date(a.WaktuAntar)-new Date(b.WaktuAntar);});
         if(routeStops.length){
-          const waypoints=[sppgLat+','+sppgLng];
-          routeStops.forEach(function(d){ waypoints.push(encodeURIComponent(d.LatAntar)+','+encodeURIComponent(d.LngAntar)); });
-          const dirUrl='https://maps.google.com/maps/dir/'+waypoints.join('/')+'?output=embed&z=13';
-          html+='<div style="border-radius:14px;overflow:hidden;border:1.5px solid #E0E0E0;margin-bottom:10px">'+
-            '<iframe width="100%" height="220" frameborder="0" style="border:0" src="'+dirUrl+'" allowfullscreen></iframe></div>';
+          // Tombol Google Maps + embed OSM (stabil tanpa API key)
+          var origin = sppgLat+','+sppgLng;
+          var dest = routeStops[routeStops.length-1].LatAntar+','+routeStops[routeStops.length-1].LngAntar;
+          var mid = routeStops.slice(0,-1).map(function(d){return d.LatAntar+','+d.LngAntar;}).join('|');
+          var gmapsDir = 'https://www.google.com/maps/dir/?api=1&origin='+encodeURIComponent(origin)+
+            '&destination='+encodeURIComponent(dest)+(mid?'&waypoints='+encodeURIComponent(mid):'')+'&travelmode=driving';
+          html+='<a class="tw-btn tw-btn-primary tw-btn-block" href="'+gmapsDir+'" target="_blank" rel="noopener" style="margin-bottom:8px"><i data-lucide="navigation" class="icon-sm"></i> Buka Rute di Google Maps</a>';
+          html+=mapEmbedSingle(routeStops[0].LatAntar, routeStops[0].LngAntar, 200);
           // Timeline rute dengan waktu
           html+='<div style="padding:10px;background:linear-gradient(135deg,#F0F7FF,#E3F2FD);border-radius:10px;margin-bottom:10px">';
           html+='<div style="font-size:11px;font-weight:800;color:#0D47A1;margin-bottom:6px;display:flex;align-items:center;gap:4px"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0D47A1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Alur Perjalanan</div>';
@@ -1658,21 +2084,20 @@ function renderAdminDashboard(){
 
           // Mini map per lokasi
           if(d.LatAntar && d.LngAntar){
-            html+='<div style="border-radius:10px;overflow:hidden;border:1px solid #E0E0E0;margin-top:8px">'+
-              '<iframe width="100%" height="130" frameborder="0" style="border:0" src="https://maps.google.com/maps?q='+encodeURIComponent(d.LatAntar)+','+encodeURIComponent(d.LngAntar)+'&z=16&output=embed" allowfullscreen></iframe></div>';
+            html+=mapEmbedSingle(d.LatAntar, d.LngAntar, 130);
           }
 
           // Foto thumbnails
           if(d.FotoAntar_Url || d.FotoJemput_Url){
             html+='<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">';
             if(d.FotoAntar_Url){
-              html+='<a href="'+escapeAttr(d.FotoAntar_Url)+'" target="_blank" style="width:80px;height:80px;border-radius:10px;overflow:hidden;border:1.5px solid #E0E0E0;display:block;position:relative">'+
-                '<img src="'+escapeAttr(d.FotoAntar_Url)+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'+
+              html+='<a href="'+escapeAttr(driveImgUrl(d.FotoAntar_Url))+'" target="_blank" style="width:80px;height:80px;border-radius:10px;overflow:hidden;border:1.5px solid #E0E0E0;display:block;position:relative">'+
+                '<img src="'+escapeAttr(driveImgUrl(d.FotoAntar_Url))+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'+
                 '<span style="position:absolute;bottom:2px;left:2px;background:rgba(0,0,0,.65);color:#fff;font-size:9px;padding:1px 5px;border-radius:4px">Antar</span></a>';
             }
             if(d.FotoJemput_Url){
-              html+='<a href="'+escapeAttr(d.FotoJemput_Url)+'" target="_blank" style="width:80px;height:80px;border-radius:10px;overflow:hidden;border:1.5px solid #E0E0E0;display:block;position:relative">'+
-                '<img src="'+escapeAttr(d.FotoJemput_Url)+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'+
+              html+='<a href="'+escapeAttr(driveImgUrl(d.FotoJemput_Url))+'" target="_blank" style="width:80px;height:80px;border-radius:10px;overflow:hidden;border:1.5px solid #E0E0E0;display:block;position:relative">'+
+                '<img src="'+escapeAttr(driveImgUrl(d.FotoJemput_Url))+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'+
                 '<span style="position:absolute;bottom:2px;left:2px;background:rgba(0,0,0,.65);color:#fff;font-size:9px;padding:1px 5px;border-radius:4px">Jemput</span></a>';
             }
             html+='</div>';
@@ -1757,21 +2182,20 @@ function renderRouteTimelineInto(container, res, mode){
 
         // Map per lokasi
         if(t.lat && t.lng){
-          html+='<div style="border-radius:10px;overflow:hidden;border:1px solid #E0E0E0;margin-top:8px">'+
-            '<iframe width="100%" height="140" frameborder="0" style="border:0" src="https://maps.google.com/maps?q='+t.lat+','+t.lng+'&z=16&output=embed" allowfullscreen></iframe></div>';
+          html+=mapEmbedSingle(t.lat, t.lng, 140);
         }
 
         // Foto bukti
         if(t.fotoAntar || t.fotoJemput){
           html+='<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">';
           if(t.fotoAntar){
-            html+='<a href="'+escapeAttr(t.fotoAntar)+'" target="_blank" style="width:70px;height:70px;border-radius:8px;overflow:hidden;border:1px solid #E0E0E0;display:block;position:relative">'+
-              '<img src="'+escapeAttr(t.fotoAntar)+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'+
+            html+='<a href="'+escapeAttr(driveImgUrl(t.fotoAntar))+'" target="_blank" style="width:70px;height:70px;border-radius:8px;overflow:hidden;border:1px solid #E0E0E0;display:block;position:relative">'+
+              '<img src="'+escapeAttr(driveImgUrl(t.fotoAntar))+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'+
               '<span style="position:absolute;bottom:1px;left:1px;background:rgba(0,0,0,.6);color:#fff;font-size:8px;padding:1px 4px;border-radius:3px">Antar</span></a>';
           }
           if(t.fotoJemput){
-            html+='<a href="'+escapeAttr(t.fotoJemput)+'" target="_blank" style="width:70px;height:70px;border-radius:8px;overflow:hidden;border:1px solid #E0E0E0;display:block;position:relative">'+
-              '<img src="'+escapeAttr(t.fotoJemput)+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'+
+            html+='<a href="'+escapeAttr(driveImgUrl(t.fotoJemput))+'" target="_blank" style="width:70px;height:70px;border-radius:8px;overflow:hidden;border:1px solid #E0E0E0;display:block;position:relative">'+
+              '<img src="'+escapeAttr(driveImgUrl(t.fotoJemput))+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'+
               '<span style="position:absolute;bottom:1px;left:1px;background:rgba(0,0,0,.6);color:#fff;font-size:8px;padding:1px 4px;border-radius:3px">Jemput</span></a>';
           }
           html+='</div>';
@@ -1785,7 +2209,7 @@ function renderRouteTimelineInto(container, res, mode){
     });
     html+='</div></div>';
   });
-  container.innerHTML=html; refreshIcons(container);
+  try{destroyAllMaps();}catch(e){}; container.innerHTML=html; refreshIcons(container); setTimeout(function(){try{initVisibleMaps();}catch(e){}},40);
 }
 
 /* ============================================================
@@ -2257,7 +2681,7 @@ async function autoInitApp() {
     }
   } catch(err) {
     let msg = err.message || 'Koneksi gagal. Pastikan GAS_WEBAPP_URL benar dan server dapat diakses.';
-    if (GAS_WEBAPP_URL === 'PASTE_URL_WEB_APP_DISINI' || !GAS_WEBAPP_URL) {
+    if (GAS_WEBAPP_URL === 'https://script.google.com/macros/s/AKfycbx_pJB9V4Bea7sSV1zWiwJOpXGOycuLaz2m2uj5kJX3dydYpfyXxJK8MAkWMMrLw3n1/exec' || !GAS_WEBAPP_URL) {
       msg = 'GAS_WEBAPP_URL belum diisi. Ganti PASTE_URL_WEB_APP_DISINI dengan URL Web App Anda.';
     }
     updateConnStatus(false, msg);
