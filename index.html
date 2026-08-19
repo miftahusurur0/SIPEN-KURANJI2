@@ -594,7 +594,7 @@ table.tw tbody tr:hover{background:#E3F2FD}
 //  2. Type: Web App > Execute as: Me > Who has access: Anyone
 //  3. Klik Deploy > Copy URL yang muncul
 // ================================================================
-const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxFlBzsqzU67LJ7J6yc9SasFH02jxAFo23ybgtdBpfulGutQKKgh_qywj141T0QCcW9/exec';
+const GAS_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbyi1rVIuTkgEx2kiLdCslPxEb_b8gFR-6C-FarVjC8hWA_qSi7FxJqZgTqXyfyUs3rn/exec';
 
 // Deteksi mode: jika di dalam iframe GAS, gunakan google.script.run
 const GAS_MODE = (typeof google !== 'undefined' && google.script && google.script.run);
@@ -2194,8 +2194,26 @@ function requestResendOTP(){
 }
 
 /* ============================================================
-   ================  KONEKSI (diperbaiki)  ======================
+   ================  SESSION RESTORE & INIT  ====================
    ============================================================ */
+
+function restoreSession() {
+  const stored = sessionStorage.getItem('mbg_user');
+  if (stored) {
+    try {
+      const user = JSON.parse(stored);
+      // Validasi sederhana
+      if (user && user.username) {
+        currentUser = user;
+        return true;
+      }
+    } catch (e) {
+      console.warn('Gagal parse session:', e);
+    }
+  }
+  return false;
+}
+
 function updateConnStatus(ok, msg) {
   const el = document.getElementById('connStatus');
   if (!el) return;
@@ -2209,6 +2227,11 @@ function updateConnStatus(ok, msg) {
 async function autoInitApp() {
   refreshIcons();
   const el = document.getElementById('connStatus');
+
+  // Jika sudah login, tidak perlu cek koneksi
+  if (currentUser) {
+    return;
+  }
 
   // Di GAS_MODE, langsung init (tidak perlu ping karena sudah dalam iframe GAS)
   if (GAS_MODE) {
@@ -2228,14 +2251,11 @@ async function autoInitApp() {
         setTimeout(() => { const a = document.getElementById('connStatusArea'); if(a) a.style.display = 'none'; }, hideDelay);
       }
     } else {
-      // Jika gagal, tampilkan pesan error yang jelas
       let msg = res.message || 'initApp gagal. Periksa GAS_WEBAPP_URL dan pastikan Web App sudah di-deploy dengan akses "Siapa saja".';
       updateConnStatus(false, msg);
     }
   } catch(err) {
-    // Jika terjadi error (mis. fetch gagal, CORS, dll)
     let msg = err.message || 'Koneksi gagal. Pastikan GAS_WEBAPP_URL benar dan server dapat diakses.';
-    // Jika URL masih placeholder, beri pesan khusus
     if (GAS_WEBAPP_URL === 'PASTE_URL_WEB_APP_DISINI' || !GAS_WEBAPP_URL) {
       msg = 'GAS_WEBAPP_URL belum diisi. Ganti PASTE_URL_WEB_APP_DISINI dengan URL Web App Anda.';
     }
@@ -2249,8 +2269,24 @@ async function autoInitApp() {
 window.addEventListener('online',()=>showToast('Online kembali','success'));
 window.addEventListener('offline',()=>showToast('Tidak ada koneksi — data tertunda','error'));
 
-function initAll(){ refreshIcons(); }
-if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',()=>{initAll();autoInitApp()})}else{initAll();autoInitApp()}
+function initAll() {
+  refreshIcons();
+  // Coba restore session terlebih dahulu
+  if (restoreSession()) {
+    // User sudah login, langsung masuk ke app
+    afterLogin();
+  } else {
+    // Tidak ada sesi, tampilkan login dan cek koneksi
+    autoInitApp();
+  }
+}
+
+// Jalankan init setelah DOM siap
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initAll);
+} else {
+  initAll();
+}
 </script>
 </body>
 </html>
