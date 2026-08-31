@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <meta name="theme-color" content="#4f46e5">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -12,404 +12,286 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#eef2f7; --surface:#fff; --surface-2:#f4f6fb; --text:#0f172a; --muted:#64748b;
-  --border:#e4e9f2; --primary:#4f46e5; --grad:linear-gradient(135deg,#4f46e5,#8b5cf6);
-  --ok:#059669; --ok-bg:#d1fae5; --warn:#b45309; --warn-bg:#fef3c7; --bad:#dc2626; --bad-bg:#fee2e2;
-  --shadow:0 1px 2px rgba(15,23,42,.05),0 10px 30px -14px rgba(15,23,42,.15); --radius:16px;
+  --bg:#eef2f7;--surface:#fff;--surface-2:#f4f6fb;--text:#0f172a;--muted:#64748b;
+  --border:#e4e9f2;--primary:#4f46e5;--grad:linear-gradient(135deg,#4f46e5,#8b5cf6);
+  --ok:#059669;--ok-bg:#d1fae5;--warn:#b45309;--warn-bg:#fef3c7;--bad:#dc2626;--bad-bg:#fee2e2;
+  --shadow:0 1px 2px rgba(15,23,42,.05),0 10px 30px -14px rgba(15,23,42,.15);--radius:16px;
 }
 [data-theme="dark"]{
-  --bg:#0a1120; --surface:#101a30; --surface-2:#0d1526; --text:#e2e8f0; --muted:#8ea0bd;
-  --border:#1d2a44; --ok-bg:rgba(16,185,129,.14); --warn-bg:rgba(245,158,11,.14); --bad-bg:rgba(239,68,68,.14);
+  --bg:#0a1120;--surface:#101a30;--surface-2:#0d1526;--text:#e2e8f0;--muted:#8ea0bd;
+  --border:#1d2a44;--ok-bg:rgba(16,185,129,.14);--warn-bg:rgba(245,158,11,.14);--bad-bg:rgba(239,68,68,.14);
   --shadow:0 1px 2px rgba(0,0,0,.3),0 12px 32px -14px rgba(0,0,0,.5);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{width:100%;max-width:100%;overflow-x:hidden;-webkit-text-size-adjust:100%}
 body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);color:var(--text);
-  transition:background .3s,color .3s;width:100%;max-width:100vw;overflow-x:hidden;min-height:100dvh}
+  width:100%;max-width:100vw;overflow-x:hidden;min-height:100dvh;transition:background .25s,color .25s}
 #app{width:100%;max-width:100%;overflow-x:hidden;min-width:0}
 
-/* ============ LOGIN ============ */
+/* Login */
 .login{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:16px;
-  background:radial-gradient(900px 500px at 15% -10%,rgba(99,102,241,.30),transparent 60%),var(--bg)}
+  background:radial-gradient(900px 500px at 15% -10%,rgba(99,102,241,.28),transparent 60%),var(--bg)}
 .login-card{width:min(400px,100%);background:var(--surface);border:1px solid var(--border);
-  border-radius:22px;padding:30px 26px;box-shadow:var(--shadow);animation:fadeUp .5s both}
-.login-logo{width:62px;height:62px;border-radius:18px;background:var(--grad);display:grid;place-items:center;
-  color:#fff;margin:0 auto 16px;box-shadow:0 14px 28px -10px rgba(99,102,241,.9)}
-.login-logo svg{width:30px;height:30px}
-.login-card h1{font-size:21px;text-align:center;font-weight:800}
-.login-card p{text-align:center;color:var(--muted);font-size:13px;margin:5px 0 20px;font-weight:500}
-.login-err{display:none;background:var(--bad-bg);color:var(--bad);font-size:13px;font-weight:600;
-  padding:10px 13px;border-radius:10px;margin-bottom:12px}
-.login-pw-wrap{position:relative;margin-top:2px}
+  border-radius:22px;padding:28px 24px;box-shadow:var(--shadow);animation:fadeUp .45s both}
+.login-logo{width:58px;height:58px;border-radius:16px;background:var(--grad);display:grid;place-items:center;
+  color:#fff;margin:0 auto 14px;box-shadow:0 12px 24px -10px rgba(99,102,241,.85)}
+.login-logo svg{width:28px;height:28px}
+.login-card h1{font-size:20px;text-align:center;font-weight:800}
+.login-card p{text-align:center;color:var(--muted);font-size:13px;margin:4px 0 18px;font-weight:500}
+.login-err{display:none;background:var(--bad-bg);color:var(--bad);font-size:13px;font-weight:600;padding:10px 12px;border-radius:10px;margin-bottom:12px}
+.login-pw-wrap{position:relative}
 .login-pw-wrap input{padding-right:42px}
-.login-pw-wrap .pw-toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;
-  color:var(--muted);cursor:pointer;padding:4px;display:grid;place-items:center;border-radius:6px;transition:color .2s}
-.login-pw-wrap .pw-toggle:hover{color:var(--primary)}
-.login-pw-wrap .pw-toggle svg{width:18px;height:18px}
+.login-pw-wrap .pw-toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;display:grid;place-items:center}
 
-/* ============ TOPBAR (minimal, 1 baris) ============ */
+/* Topbar */
 .topbar{position:sticky;top:0;z-index:40;border-bottom:1px solid var(--border);
-  background:color-mix(in srgb,var(--surface) 92%,transparent);
-  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
-  padding:8px 10px;width:100%;max-width:100%}
+  background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  padding:8px 10px;width:100%}
 .tb-row{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%;min-width:0}
 .brand{display:flex;gap:6px;align-items:center;min-width:0;flex:1}
-.brand-logo{width:34px;height:34px;border-radius:10px;background:var(--grad);display:grid;place-items:center;
-  color:#fff;box-shadow:0 8px 18px -8px rgba(99,102,241,.9);flex:none}
+.brand-logo{width:34px;height:34px;border-radius:10px;background:var(--grad);display:grid;place-items:center;color:#fff;flex:none;box-shadow:0 6px 14px -6px rgba(99,102,241,.8)}
 .brand-logo svg{width:17px;height:17px}
 .brand b{font-size:14.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tb-actions{display:flex;gap:5px;align-items:center;flex-shrink:0}
-.userchip{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--muted);max-width:120px}
+.userchip{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--muted);max-width:110px}
 .userchip .uname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.avatar{width:28px;height:28px;border-radius:50%;background:var(--grad);color:#fff;display:grid;
-  place-items:center;font-size:12px;font-weight:800;flex:none}
+.avatar{width:28px;height:28px;border-radius:50%;background:var(--grad);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:800;flex:none}
 .icon-btn{width:34px;height:34px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);
-  color:var(--text);cursor:pointer;display:grid;place-items:center;transition:border-color .2s,color .2s,box-shadow .2s;flex:none}
+  color:var(--text);cursor:pointer;display:grid;place-items:center;flex:none;transition:border-color .2s,color .2s,box-shadow .2s}
 .icon-btn svg{width:15px;height:15px}
-.icon-btn:hover{box-shadow:var(--shadow);border-color:var(--primary);color:var(--primary)}
-.icon-btn:active{transform:scale(.94)}
-/* Tidak ada menu horizontal — hanya sidebar kiri */
+.icon-btn:hover{border-color:var(--primary);color:var(--primary);box-shadow:var(--shadow)}
 .menus,.menu-btn{display:none!important}
 .is-driver .admin-only{display:none!important}
 
-/* ============ CONTENT ============ */
-main{max-width:1100px;margin:0 auto;padding:14px 12px calc(32px + env(safe-area-inset-bottom));width:100%;max-width:100%;min-width:0}
-.tab{display:none;width:100%;max-width:100%;min-width:0}
-.tab.show{display:block;animation:fadeUp .4s cubic-bezier(.2,.7,.3,1) both}
+/* Content */
+main{max-width:1100px;margin:0 auto;padding:14px 12px calc(32px + env(safe-area-inset-bottom));width:100%;min-width:0}
+.tab{display:none;width:100%;min-width:0}
+.tab.show{display:block;animation:fadeUp .4s ease both}
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px;width:100%}
-.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
-  padding:16px;display:flex;gap:12px;align-items:center;box-shadow:var(--shadow);transition:transform .28s;animation:fadeUp .5s both}
-.stat-card:nth-child(2){animation-delay:.05s}.stat-card:nth-child(3){animation-delay:.1s}
-.stat-card:nth-child(4){animation-delay:.15s}.stat-card:nth-child(5){animation-delay:.2s}.stat-card:nth-child(6){animation-delay:.25s}
-.stat-card:hover{transform:translateY(-4px)}
-.stat-ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;color:#fff;flex:none}
-.stat-ic svg{width:19px;height:19px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes shrink{to{width:0}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px}
+@media(min-width:640px){.stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(min-width:1024px){.stats{grid-template-columns:repeat(6,minmax(0,1fr))}}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;display:flex;gap:10px;align-items:center;box-shadow:var(--shadow);transition:transform .2s}
+.stat-card:hover{transform:translateY(-2px)}
+.stat-ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:#fff;flex:none}
+.stat-ic svg{width:18px;height:18px}
 .g1{background:linear-gradient(135deg,#4f46e5,#8b5cf6)}.g2{background:linear-gradient(135deg,#0ea5e9,#06b6d4)}
 .g3{background:linear-gradient(135deg,#f59e0b,#f97316)}.g4{background:linear-gradient(135deg,#10b981,#14b8a6)}
 .g5{background:linear-gradient(135deg,#ec4899,#f43f5e)}.g6{background:linear-gradient(135deg,#6366f1,#3b82f6)}
-.stat-num{font-size:22px;font-weight:800;line-height:1.15;font-variant-numeric:tabular-nums}
-.stat-label{font-size:11.5px;color:var(--muted);font-weight:600}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
-  padding:18px;box-shadow:var(--shadow);margin-bottom:14px;width:100%;max-width:100%;min-width:0;overflow:hidden}
+.stat-num{font-size:20px;font-weight:800;line-height:1.15;font-variant-numeric:tabular-nums}
+.stat-label{font-size:11px;color:var(--muted);font-weight:600}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:14px;width:100%;max-width:100%;min-width:0;overflow:hidden}
 .card-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;min-width:0}
 .ch-ic{width:36px;height:36px;border-radius:10px;background:var(--grad);color:#fff;display:grid;place-items:center;flex:none}
 .ch-ic svg{width:16px;height:16px}
 .card-head h2{font-size:15px;font-weight:700}
 .card-head small{display:block;color:var(--muted);font-size:11.5px;font-weight:500;margin-top:1px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:12px;width:100%;min-width:0}
-label{display:block;font-size:10.5px;font-weight:700;color:var(--muted);margin-bottom:5px;letter-spacing:.6px;text-transform:uppercase}
-input,select{width:100%;max-width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:11px;
-  background:var(--surface-2);color:var(--text);font:inherit;font-size:14px;transition:all .2s}
-input:focus,select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 4px rgba(79,70,229,.15);background:var(--surface)}
-.btn{position:relative;display:inline-flex;align-items:center;gap:8px;border:0;border-radius:11px;
-  padding:11px 20px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:all .25s;
-  color:#fff;background:var(--grad);box-shadow:0 10px 22px -10px rgba(99,102,241,.85);margin-top:4px}
+.grid{display:grid;grid-template-columns:1fr;gap:12px;width:100%;min-width:0}
+@media(min-width:640px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(min-width:900px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+label{display:block;font-size:10.5px;font-weight:700;color:var(--muted);margin-bottom:5px;letter-spacing:.5px;text-transform:uppercase}
+input,select{width:100%;max-width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:11px;background:var(--surface-2);color:var(--text);font:inherit;font-size:14px;transition:border-color .2s,box-shadow .2s}
+input:focus,select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 4px rgba(79,70,229,.12);background:var(--surface)}
+.btn{position:relative;display:inline-flex;align-items:center;gap:8px;border:0;border-radius:11px;padding:11px 18px;font:inherit;font-size:14px;font-weight:700;cursor:pointer;color:#fff;background:var(--grad);box-shadow:0 8px 18px -8px rgba(99,102,241,.75);margin-top:4px;transition:transform .2s}
 .btn svg{width:15px;height:15px}
-.btn:hover{transform:translateY(-2px)}
-.btn:active{transform:scale(.96)}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:scale(.97)}
 .btn:disabled{opacity:.7;cursor:not-allowed;transform:none}
 .btn.loading .btn-label{opacity:.4}
-.btn.loading::after{content:'';width:14px;height:14px;border:2px solid rgba(255,255,255,.4);
-  border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.btn-sm{padding:7px 13px;font-size:12px;border-radius:9px;margin:0}
-.tablewrap{overflow-x:auto;border:1px solid var(--border);border-radius:13px;-webkit-overflow-scrolling:touch;width:100%;max-width:100%;-webkit-overflow-scrolling:touch}
-table{width:100%;border-collapse:collapse;font-size:13px;min-width:0}
-th{background:var(--surface-2);color:var(--muted);text-transform:uppercase;font-size:10px;
-  letter-spacing:.6px;padding:10px 10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
-td{padding:10px 10px;border-bottom:1px solid var(--border);vertical-align:top}
-/* Tabel lebar: scroll horizontal di dalam .tablewrap, bukan di halaman */
-.tablewrap table{min-width:480px}
-tbody tr{transition:background .2s}
+.btn.loading::after{content:'';width:14px;height:14px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+.btn-sm{padding:7px 12px;font-size:12px;border-radius:9px;margin:0}
+
+.tablewrap{overflow-x:auto;border:1px solid var(--border);border-radius:12px;width:100%;max-width:100%;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:13px}
+.tablewrap table{min-width:420px}
+th{background:var(--surface-2);color:var(--muted);text-transform:uppercase;font-size:10px;letter-spacing:.6px;padding:10px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top}
+tbody tr{transition:background .15s}
 tbody tr:hover{background:var(--surface-2)}
 tbody tr:last-child td{border-bottom:0}
 .cell-main{font-weight:700}
-.cell-sub{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:11.5px;margin-top:3px}
+.cell-sub{display:flex;align-items:center;gap:4px;color:var(--muted);font-size:11.5px;margin-top:2px}
 .cell-sub svg{width:12px;height:12px}
-.badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700}
 .badge .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
 .badge.ok{background:var(--ok-bg);color:var(--ok)}
 .badge.warn{background:var(--warn-bg);color:var(--warn)}
 .badge.bad{background:var(--bad-bg);color:var(--bad)}
 a.link{color:var(--primary);font-weight:700;text-decoration:none}
-.empty{padding:32px;text-align:center;color:var(--muted);font-weight:600}
-.empty svg{width:34px;height:34px;opacity:.45;margin-bottom:8px}
-.empty div{font-size:13px}
-.skel{height:12px;border-radius:6px;background:linear-gradient(90deg,var(--surface-2) 25%,var(--border) 50%,var(--surface-2) 75%);
-  background-size:200% 100%;animation:shimmer 1.2s infinite}
+.empty{padding:28px;text-align:center;color:var(--muted);font-weight:600}
+.empty svg{width:32px;height:32px;opacity:.4;margin-bottom:6px}
+.skel{height:12px;border-radius:6px;background:linear-gradient(90deg,var(--surface-2) 25%,var(--border) 50%,var(--surface-2) 75%);background-size:200% 100%;animation:shimmer 1.2s infinite}
 @keyframes shimmer{to{background-position:-200% 0}}
-.toast{position:fixed;top:16px;right:16px;left:16px;max-width:360px;margin-left:auto;background:#0d1530;color:#fff;
-  padding:14px 16px 18px;border-radius:14px;box-shadow:0 24px 48px -12px rgba(0,0,0,.5);display:none;z-index:200;
-  font-size:13px;font-weight:600;animation:toastIn .4s cubic-bezier(.2,.9,.3,1.25) both}
+.toast{position:fixed;top:14px;right:14px;left:14px;max-width:360px;margin-left:auto;background:#0d1530;color:#fff;padding:13px 15px 16px;border-radius:14px;box-shadow:0 20px 40px -12px rgba(0,0,0,.45);display:none;z-index:200;font-size:13px;font-weight:600;animation:fadeUp .35s both}
 .toast.show{display:flex;gap:10px;align-items:flex-start}
 .toast svg{width:18px;height:18px;flex:none;margin-top:1px}
 .toast.ok-t svg{color:#34d399}.toast.err-t svg{color:#f87171}
-.toast .bar{position:absolute;left:16px;right:16px;bottom:8px;height:3px;border-radius:3px;background:rgba(255,255,255,.15);overflow:hidden}
+.toast .bar{position:absolute;left:15px;right:15px;bottom:7px;height:3px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}
 .toast .bar i{display:block;height:100%;width:100%;background:var(--grad);animation:shrink 3.4s linear forwards}
-@keyframes toastIn{from{opacity:0;transform:translateX(60px)}to{opacity:1;transform:none}}
-@keyframes shrink{to{width:0}}
 
-/* ============ ANTAR (DRIVER PAGE) ============ */
-.antar-status-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+/* Sidebar KIRI */
+.hamburger-btn{display:flex;width:34px;height:34px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;flex-direction:column;justify-content:center;align-items:center;gap:3.5px;padding:7px;flex:none;touch-action:manipulation}
+.hamburger-btn span{display:block;width:15px;height:2px;background:currentColor;border-radius:2px;transition:transform .25s,opacity .2s}
+.hamburger-btn.open span:nth-child(1){transform:translateY(5.5px) rotate(45deg)}
+.hamburger-btn.open span:nth-child(2){opacity:0;transform:scaleX(0)}
+.hamburger-btn.open span:nth-child(3){transform:translateY(-5.5px) rotate(-45deg)}
+.mobile-drawer{position:fixed!important;top:0!important;left:0!important;right:auto!important;width:min(280px,88vw);height:100dvh;max-height:100dvh;
+  background:var(--surface);border-right:1px solid var(--border);z-index:1000;box-shadow:8px 0 28px rgba(0,0,0,.16);padding:16px 12px;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;transform:translate3d(-110%,0,0);transition:transform .28s cubic-bezier(.32,.72,0,1);pointer-events:none;visibility:hidden}
+.mobile-drawer.open{transform:translate3d(0,0,0)!important;pointer-events:auto;visibility:visible}
+.mobile-drawer .md-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.mobile-drawer .md-header h3{font-size:15px;font-weight:800}
+.mobile-drawer .md-close{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);cursor:pointer;display:grid;place-items:center}
+.mobile-drawer .md-close svg{width:16px;height:16px}
+.mobile-drawer .md-item{display:flex;align-items:center;gap:11px;padding:10px 11px;border-radius:10px;font-size:13.5px;font-weight:600;color:var(--muted);cursor:pointer;margin-bottom:2px;transition:background .15s,color .15s;user-select:none;touch-action:manipulation}
+.mobile-drawer .md-item:hover{background:var(--surface-2);color:var(--text)}
+.mobile-drawer .md-item.active{background:rgba(79,70,229,.1);color:var(--primary);font-weight:700}
+.mobile-drawer .md-item svg{width:17px;height:17px;flex:none}
+.mobile-drawer .md-section{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;padding:12px 11px 4px;opacity:.7}
+.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:999;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .25s,visibility .25s}
+.drawer-overlay.show{opacity:1;visibility:visible;pointer-events:auto}
+
+/* Antar / foto / mode */
+.mode-tabs{display:flex;gap:6px;margin-bottom:14px;background:var(--surface-2);padding:4px;border-radius:12px;border:1px solid var(--border)}
+.mode-tab{flex:1;padding:10px 12px;border:0;border-radius:9px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;gap:6px;transition:all .2s}
+.mode-tab.active{background:var(--grad);color:#fff;box-shadow:0 6px 14px -6px rgba(99,102,241,.7)}
+.mode-tab svg{width:15px;height:15px}
+.antar-status-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:14px}
+@media(min-width:640px){.antar-status-grid{grid-template-columns:1fr 1fr}}
 .gps-box,.jarak-box{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center}
-.gps-box .val,.jarak-box .val{font-size:18px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums}
-.gps-box .val.ok{color:var(--ok)}.gps-box .val.err{color:var(--bad)}
-.jarak-box .val{color:var(--primary)}
-.foto-area{margin-top:14px;border:2px dashed var(--border);border-radius:13px;padding:20px;text-align:center;
-  cursor:pointer;transition:border-color .2s,background .2s;position:relative;min-height:120px;display:grid;place-items:center;
-  -webkit-tap-highlight-color:transparent;touch-action:manipulation}
-.foto-area:hover{border-color:var(--primary);background:rgba(79,70,229,.04)}
+.gps-box .val,.jarak-box .val{font-size:17px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums}
+.gps-box .val.ok{color:var(--ok)}.gps-box .val.err{color:var(--bad)}.jarak-box .val{color:var(--primary)}
+.foto-area{margin-top:14px;border:2px dashed var(--border);border-radius:13px;padding:20px;text-align:center;cursor:pointer;position:relative;min-height:120px;display:grid;place-items:center;transition:border-color .2s;touch-action:manipulation}
+.foto-area:hover{border-color:var(--primary)}
 .foto-area.has-img{padding:8px;border-style:solid}
 .foto-area.is-processing{opacity:.75;pointer-events:none;border-color:var(--primary)}
 .foto-area.is-processing .placeholder svg{animation:spin .8s linear infinite}
 .foto-area img{max-width:100%;max-height:220px;border-radius:10px;object-fit:contain;display:block;margin:0 auto}
 .foto-area .placeholder{color:var(--muted);font-size:13px;font-weight:600}
 .foto-area .placeholder svg{width:36px;height:36px;opacity:.4;margin-bottom:6px}
-.foto-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0}
 .foto-size-label{font-size:11px;font-weight:600;color:var(--ok);margin-top:6px;text-align:center}
 .foto-actions{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
-.foto-actions .btn-sm{flex:1;min-width:120px;justify-content:center;margin:0;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-.sppg-config{margin-top:12px;padding:12px;background:var(--surface-2);border-radius:11px;border:1px solid var(--border)}
-.sppg-config summary{font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;text-transform:uppercase;letter-spacing:.5px}
-.sppg-config .grid{margin-top:10px}
-
-/* ============ ABSENSI MATRIX ============ */
-.absensi-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
-.absensi-toolbar select,.absensi-toolbar input{width:auto;min-width:120px;padding:8px 12px;font-size:13px;border-radius:10px}
-.absensi-toolbar .btn-sm{margin:0}
-.matrix-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:13px}
-.matrix-wrap table{min-width:auto;font-size:12px}
-.matrix-wrap th,.matrix-wrap td{padding:8px 10px;text-align:center;min-width:38px}
-.matrix-wrap th:first-child,.matrix-wrap td:first-child{text-align:center;width:40px}
-.matrix-wrap th:nth-child(2),.matrix-wrap td:nth-child(2),
-.matrix-wrap th:nth-child(3),.matrix-wrap td:nth-child(3),
-.matrix-wrap th:nth-child(4),.matrix-wrap td:nth-child(4){text-align:left;min-width:auto}
-.matrix-wrap td.col-total{font-weight:800;color:var(--primary);background:rgba(79,70,229,.06)}
-.matrix-wrap td.col-ket{text-align:left;min-width:120px}
-.cell-check{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;font-weight:800;font-size:14px}
-.cell-check.ok{background:var(--ok-bg);color:var(--ok)}
-.cell-check.bad{background:var(--bad-bg);color:var(--bad)}
-.cell-check.warn{color:var(--warn);animation:pulse 1.2s infinite}
-.cell-check.none{color:var(--border)}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.matrix-legend{display:flex;gap:16px;margin-top:12px;font-size:12px;color:var(--muted);font-weight:600;flex-wrap:wrap}
-.matrix-legend span{display:flex;align-items:center;gap:5px}
-.matrix-legend .lg-ok{color:var(--ok)}.matrix-legend .lg-bad{color:var(--bad)}.matrix-legend .lg-warn{color:var(--warn)}.matrix-legend .lg-none{color:var(--border)}
-
-/* ============ DATABASE TAB ============ */
-.db-status-bar{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;margin-bottom:16px}
-.db-dot{width:12px;height:12px;border-radius:50%;flex:none;animation:dbPulse 2s infinite}
-.db-dot.ok{background:var(--ok);box-shadow:0 0 8px rgba(5,150,105,.5)}
-.db-dot.err{background:var(--bad);box-shadow:0 0 8px rgba(220,38,38,.5)}
-.db-dot.loading{background:var(--warn);box-shadow:0 0 8px rgba(180,83,9,.5)}
-@keyframes dbPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
-.db-status-text{font-size:13px;font-weight:700}.db-status-text.ok{color:var(--ok)}.db-status-text.err{color:var(--bad)}
-.db-sheet-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:16px}
-.db-sheet-card{padding:14px;border:1px solid var(--border);border-radius:12px;background:var(--surface);transition:all .25s}
-.db-sheet-card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
-.db-sheet-card .sh-name{font-size:13px;font-weight:800;margin-bottom:6px;display:flex;align-items:center;gap:6px}
-.db-sheet-card .sh-name .dot{width:8px;height:8px;border-radius:50%;flex:none}
-.db-sheet-card .sh-name .dot.ok{background:var(--ok)}.db-sheet-card .sh-name .dot.err{background:var(--bad)}.db-sheet-card .sh-name .dot.warn{background:var(--warn)}
-.db-sheet-card .sh-meta{font-size:11px;color:var(--muted);line-height:1.6}
-.db-sheet-card .sh-meta b{color:var(--text)}
-.db-actions{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
-.db-actions .btn-sm{flex:1;min-width:140px;justify-content:center}
-.db-user-search{margin-bottom:12px}
-
-/* ============ PASSWORD REVEAL & RESET ============ */
-.pw-reveal-btn{background:none;border:1px solid var(--border);border-radius:8px;padding:4px 10px;font:inherit;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .2s;white-space:nowrap}
-.pw-reveal-btn:hover{border-color:var(--primary);color:var(--primary)}
-.pw-reveal-btn svg{width:14px;height:14px}
-.pw-reveal-btn.active{background:var(--primary);color:#fff;border-color:var(--primary)}
-.pw-cell{display:flex;align-items:center;gap:6px}
-.pw-hash{font-family:monospace;font-size:11px;color:var(--muted);word-break:break-all;max-width:160px;overflow:hidden;text-overflow:ellipsis}
-.pw-hash.revealed{max-width:none;color:var(--text)}
-.pw-actions-cell{display:flex;gap:4px;flex-wrap:nowrap}
-.pw-reset-btn{background:none;border:1px solid var(--border);border-radius:8px;padding:4px 8px;font:inherit;font-size:11px;font-weight:700;color:var(--warn);cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all .2s;white-space:nowrap}
-.pw-reset-btn:hover{background:var(--warn);color:#fff;border-color:var(--warn)}
-.pw-reset-btn svg{width:13px;height:13px}
-.modal-overlay{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.45);display:none;place-items:center;padding:16px;animation:fadeIn .2s}
-.modal-overlay.show{display:grid}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-.modal-box{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:24px;width:min(400px,100%);box-shadow:var(--shadow);animation:fadeUp .35s both}
-.modal-box h3{font-size:16px;font-weight:800;margin-bottom:4px}
-.modal-box .modal-sub{font-size:13px;color:var(--muted);margin-bottom:16px}
-.modal-box label{margin-bottom:4px}
-.modal-box input{margin-bottom:14px}
-.modal-box .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
-.modal-box .btn-sm{padding:9px 18px;font-size:13px}
-.modal-box .btn-cancel{background:var(--surface-2);color:var(--text);box-shadow:none}
-
-/* ============ INSTANSI FORM: TIPE & KATEGORI ============ */
-.tipe-group{display:flex;gap:10px;margin-bottom:6px}
-.tipe-card{flex:1;padding:14px;border:2px solid var(--border);border-radius:13px;text-align:center;cursor:pointer;
-  transition:all .25s;background:var(--surface-2);position:relative}
-.tipe-card:hover{border-color:var(--primary);transform:translateY(-2px)}
-.tipe-card.active{border-color:var(--primary);background:rgba(79,70,229,.08);box-shadow:0 4px 16px -4px rgba(79,70,229,.3)}
-.tipe-card .tc-icon{font-size:24px;margin-bottom:4px}
-.tipe-card .tc-label{font-size:13px;font-weight:700;color:var(--text)}
-.tipe-card .tc-sub{font-size:11px;color:var(--muted);margin-top:2px}
-.tipe-card.active .tc-label{color:var(--primary)}
-.tipe-card input{position:absolute;opacity:0;pointer-events:none}
-.kategori-section{margin-top:10px;padding:14px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;display:none}
-.kategori-section.show{display:block;animation:fadeUp .3s both}
-.kategori-section .ks-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
-.kategori-section .ks-title .ks-badge{font-size:10px;font-weight:800;padding:2px 8px;border-radius:6px;color:#fff}
-.kategori-section .ks-badge.pk{background:linear-gradient(135deg,#4f46e5,#8b5cf6)}
-.kategori-section .ks-badge.pb{background:linear-gradient(135deg,#0ea5e9,#06b6d4)}
-.chip-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.chip{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:999px;font:inherit;font-size:12.5px;
-  font-weight:600;color:var(--muted);border:1.5px solid var(--border);background:var(--surface);
-  cursor:pointer;transition:all .22s;white-space:nowrap}
-.chip:hover{border-color:var(--primary);color:var(--primary)}
-.chip.active{color:#fff;background:var(--grad);border-color:var(--primary);box-shadow:0 4px 12px -4px rgba(79,70,229,.4)}
-.chip input{position:absolute;opacity:0;pointer-events:none}
-.lp-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px}
-.lp-grid .lp-item label{font-size:10px;color:var(--muted);letter-spacing:.5px}
-.lp-total{text-align:center;padding:8px;background:rgba(79,70,229,.06);border-radius:10px;font-size:13px;font-weight:700;color:var(--primary);margin-top:8px}
-.lp-total span{font-size:18px;font-weight:800}
+.foto-actions .btn-sm{flex:1;min-width:120px;justify-content:center;margin:0}
 .antar-info-box{margin-top:10px;padding:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:11px}
 .antar-info-box .ai-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:13px}
 .antar-info-box .ai-row+.ai-row{border-top:1px solid var(--border);margin-top:4px;padding-top:8px}
 .antar-info-box .ai-label{color:var(--muted);font-weight:600;font-size:12px}
 .antar-info-box .ai-val{font-weight:700}
 .antar-info-box .ai-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;background:rgba(79,70,229,.1);color:var(--primary)}
+.sppg-config{margin-top:12px;padding:12px;background:var(--surface-2);border-radius:11px;border:1px solid var(--border)}
+.sppg-config summary{font-size:12px;font-weight:700;color:var(--muted);cursor:pointer;text-transform:uppercase;letter-spacing:.5px}
 
-/* ============ HAMBURGER + SIDEBAR KIRI (paksa kiri) ============ */
-.hamburger-btn{display:flex;width:34px;height:34px;border-radius:10px;border:1.5px solid var(--border);
-  background:var(--surface);color:var(--text);cursor:pointer;flex-direction:column;justify-content:center;align-items:center;gap:3.5px;padding:7px 6px;
-  transition:border-color .2s,color .2s,box-shadow .2s;touch-action:manipulation;-webkit-tap-highlight-color:transparent;flex:none}
-.hamburger-btn:hover{border-color:var(--primary);color:var(--primary);box-shadow:var(--shadow)}
-.hamburger-btn span{display:block;width:15px;height:2px;background:currentColor;border-radius:2px;transition:transform .25s ease,opacity .2s ease}
-.hamburger-btn.open span:nth-child(1){transform:translateY(5.5px) rotate(45deg)}
-.hamburger-btn.open span:nth-child(2){opacity:0;transform:scaleX(0)}
-.hamburger-btn.open span:nth-child(3){transform:translateY(-5.5px) rotate(-45deg)}
-/* Sidebar SELALU dari KIRI — right di-reset */
-.mobile-drawer{
-  position:fixed!important;top:0!important;left:0!important;right:auto!important;
-  width:min(280px,88vw);height:100%;height:100dvh;max-height:100dvh;
-  background:var(--surface);border-right:1px solid var(--border);border-left:none;
-  z-index:1000;box-shadow:8px 0 28px rgba(0,0,0,.18);padding:16px 12px;overflow-y:auto;overflow-x:hidden;
-  -webkit-overflow-scrolling:touch;overscroll-behavior:contain;
-  transform:translate3d(-110%,0,0);transition:transform .28s cubic-bezier(.32,.72,0,1);
-  pointer-events:none;visibility:hidden;will-change:transform}
-.mobile-drawer.open{transform:translate3d(0,0,0)!important;pointer-events:auto;visibility:visible}
-.mobile-drawer .md-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)}
-.mobile-drawer .md-header h3{font-size:15px;font-weight:800}
-.mobile-drawer .md-close{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--surface-2);
-  color:var(--text);cursor:pointer;display:grid;place-items:center;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-.mobile-drawer .md-close svg{width:16px;height:16px}
-.mobile-drawer .md-item{display:flex;align-items:center;gap:11px;padding:10px 11px;border-radius:10px;font-size:13.5px;
-  font-weight:600;color:var(--muted);cursor:pointer;margin-bottom:2px;
-  transition:background .15s ease,color .15s ease;touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none}
-.mobile-drawer .md-item:hover{background:var(--surface-2);color:var(--text)}
-.mobile-drawer .md-item:active{background:rgba(79,70,229,.12)}
-.mobile-drawer .md-item.active{background:rgba(79,70,229,.1);color:var(--primary);font-weight:700}
-.mobile-drawer .md-item svg{width:17px;height:17px;flex:none}
-.mobile-drawer .md-section{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;padding:12px 11px 4px;opacity:.7}
-.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:999;
-  opacity:0;visibility:hidden;pointer-events:none;transition:opacity .25s ease,visibility .25s;
-  touch-action:manipulation}
-.drawer-overlay.show{opacity:1;visibility:visible;pointer-events:auto}
-@media (prefers-reduced-motion:reduce){
-  .mobile-drawer,.hamburger-btn span,.drawer-overlay,.mobile-drawer .md-item{transition:none!important}
+/* Absensi / matrix / DB / modal / instansi form */
+.absensi-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.absensi-toolbar select,.absensi-toolbar input{width:auto;min-width:120px;padding:8px 12px;font-size:13px;border-radius:10px}
+.matrix-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:13px}
+.matrix-wrap table{font-size:12px}
+.matrix-wrap th,.matrix-wrap td{padding:8px 10px;text-align:center;min-width:38px}
+.matrix-wrap td.col-total{font-weight:800;color:var(--primary);background:rgba(79,70,229,.06)}
+.matrix-wrap td.col-ket{text-align:left;min-width:120px}
+.cell-check{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;font-weight:800;font-size:14px}
+.cell-check.ok{background:var(--ok-bg);color:var(--ok)}.cell-check.bad{background:var(--bad-bg);color:var(--bad)}
+.cell-check.warn{color:var(--warn);animation:pulse 1.2s infinite}.cell-check.none{color:var(--border)}
+.matrix-legend{display:flex;gap:16px;margin-top:12px;font-size:12px;color:var(--muted);font-weight:600;flex-wrap:wrap}
+.db-status-bar{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;margin-bottom:16px}
+.db-dot{width:12px;height:12px;border-radius:50%;flex:none}
+.db-dot.ok{background:var(--ok);box-shadow:0 0 8px rgba(5,150,105,.45)}.db-dot.err{background:var(--bad)}.db-dot.loading{background:var(--warn);animation:pulse 1.5s infinite}
+.db-status-text{font-size:13px;font-weight:700}.db-status-text.ok{color:var(--ok)}.db-status-text.err{color:var(--bad)}
+.db-sheet-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:16px}
+.db-sheet-card{padding:14px;border:1px solid var(--border);border-radius:12px;background:var(--surface)}
+.db-sheet-card .sh-name{font-size:13px;font-weight:800;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.db-sheet-card .sh-name .dot{width:8px;height:8px;border-radius:50%}
+.db-sheet-card .sh-name .dot.ok{background:var(--ok)}.db-sheet-card .sh-name .dot.err{background:var(--bad)}.db-sheet-card .sh-name .dot.warn{background:var(--warn)}
+.db-sheet-card .sh-meta{font-size:11px;color:var(--muted);line-height:1.6}
+.db-sheet-card .sh-meta b{color:var(--text)}
+.db-actions{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.db-actions .btn-sm{flex:1;min-width:130px;justify-content:center}
+.db-user-search{margin-bottom:12px}
+.modal-overlay{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.45);display:none;place-items:center;padding:16px}
+.modal-overlay.show{display:grid}
+.modal-box{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:22px;width:min(400px,100%);box-shadow:var(--shadow);animation:fadeUp .3s both}
+.modal-box h3{font-size:16px;font-weight:800;margin-bottom:4px}
+.modal-box .modal-sub{font-size:13px;color:var(--muted);margin-bottom:14px}
+.modal-box .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
+.modal-box .btn-cancel{background:var(--surface-2);color:var(--text);box-shadow:none}
+.tipe-group{display:flex;flex-direction:column;gap:10px;margin-bottom:6px}
+@media(min-width:640px){.tipe-group{flex-direction:row}}
+.tipe-card{flex:1;padding:14px;border:2px solid var(--border);border-radius:13px;text-align:center;cursor:pointer;background:var(--surface-2);position:relative;transition:border-color .2s,transform .2s}
+.tipe-card:hover{border-color:var(--primary);transform:translateY(-1px)}
+.tipe-card.active{border-color:var(--primary);background:rgba(79,70,229,.08)}
+.tipe-card .tc-icon{font-size:24px;margin-bottom:4px}
+.tipe-card .tc-label{font-size:13px;font-weight:700}
+.tipe-card .tc-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.tipe-card.active .tc-label{color:var(--primary)}
+.tipe-card input{position:absolute;opacity:0;pointer-events:none}
+.kategori-section{margin-top:10px;padding:14px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;display:none}
+.kategori-section.show{display:block;animation:fadeUp .3s both}
+.kategori-section .ks-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.kategori-section .ks-badge{font-size:10px;font-weight:800;padding:2px 8px;border-radius:6px;color:#fff}
+.kategori-section .ks-badge.pk{background:var(--grad)}.kategori-section .ks-badge.pb{background:linear-gradient(135deg,#0ea5e9,#06b6d4)}
+.chip-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:999px;font:inherit;font-size:12.5px;font-weight:600;color:var(--muted);border:1.5px solid var(--border);background:var(--surface);cursor:pointer;transition:all .2s;user-select:none;touch-action:manipulation}
+.chip:hover{border-color:var(--primary);color:var(--primary)}
+.chip.active{color:#fff;background:var(--grad);border-color:var(--primary)}
+.chip.chip-pb.active{background:linear-gradient(135deg,#0ea5e9,#06b6d4);border-color:#0ea5e9}
+.chip input{position:absolute;opacity:0;pointer-events:none}
+.kat-detail-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.kat-row{display:grid;grid-template-columns:1fr 72px 72px 56px;gap:8px;align-items:end;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:11px;animation:fadeUp .25s both}
+.kat-row .kr-name{font-size:13px;font-weight:700;padding-bottom:8px}
+.kat-row .kr-name small{display:block;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.kat-row input{padding:8px 10px;font-size:13px;text-align:center}
+.kat-row .kr-sub{font-size:13px;font-weight:800;color:var(--primary);text-align:center;padding-bottom:8px}
+.lp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+@media(min-width:640px){.lp-grid{grid-template-columns:1fr 1fr 1fr}}
+.lp-total{text-align:center;padding:10px;background:rgba(79,70,229,.06);border-radius:10px;font-size:13px;font-weight:700;color:var(--primary);margin-top:10px}
+.lp-total span{font-size:18px;font-weight:800}
+@media(max-width:480px){
+  .kat-row{grid-template-columns:1fr 1fr;gap:6px}
+  .kat-row .kr-name{grid-column:1/-1;padding-bottom:0}
+  .kat-row .kr-sub{grid-column:1/-1;padding-bottom:0}
 }
-/* Mode switch Antar / Pengambilan */
-.mode-tabs{display:flex;gap:6px;margin-bottom:14px;background:var(--surface-2);padding:4px;border-radius:12px;border:1px solid var(--border)}
-.mode-tab{flex:1;padding:10px 12px;border:0;border-radius:9px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;
-  background:transparent;color:var(--muted);transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px}
-.mode-tab.active{background:var(--grad);color:#fff;box-shadow:0 6px 14px -6px rgba(99,102,241,.7)}
-.mode-tab svg{width:15px;height:15px}
-
-/* ============ LAPORAN INSTANSI ============ */
 .laporan-actions{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
 .riwayat-timeline{margin-top:12px;border-left:3px solid var(--border);padding-left:16px}
 .riwayat-item{position:relative;padding:10px 0 10px 20px;font-size:13px}
-.riwayat-item::before{content:'';position:absolute;left:-25px;top:16px;width:10px;height:10px;border-radius:50%;
-  background:var(--primary);border:2px solid var(--surface)}
+.riwayat-item::before{content:'';position:absolute;left:-25px;top:16px;width:10px;height:10px;border-radius:50%;background:var(--primary);border:2px solid var(--surface)}
 .riwayat-item .ri-date{font-weight:700;color:var(--primary);font-size:12px}
 .riwayat-item .ri-pkpb{margin-top:2px;font-weight:700}
 .riwayat-item .ri-ket{color:var(--muted);font-size:12px;margin-top:2px}
-.edit-pk-btn{background:none;border:1px solid var(--primary);border-radius:8px;padding:4px 10px;font:inherit;
-  font-size:11px;font-weight:700;color:var(--primary);cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all .2s}
+.edit-pk-btn{background:none;border:1px solid var(--primary);border-radius:8px;padding:4px 10px;font:inherit;font-size:11px;font-weight:700;color:var(--primary);cursor:pointer;display:inline-flex;align-items:center;gap:4px}
 .edit-pk-btn:hover{background:var(--primary);color:#fff}
-.edit-pk-btn svg{width:12px;height:12px}
-
-/* ============ PRINT AREA STYLES ============ */
-.print-instansi{font-family:'Plus Jakarta Sans',system-ui,sans-serif;padding:20px;color:#0f172a}
-.print-instansi h2{font-size:16px;margin-bottom:4px}
-.print-instansi .print-sub{font-size:12px;color:#64748b;margin-bottom:16px}
-.print-instansi table{width:100%;border-collapse:collapse;font-size:11px}
-.print-instansi th,.print-instansi td{border:1px solid #e2e8f0;padding:6px 8px;text-align:center}
-.print-instansi th{background:#f1f5f9;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.5px}
-.print-instansi td:nth-child(2){text-align:left}
-.print-instansi .print-type{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;background:rgba(79,70,229,.1);color:#4f46e5}
-.print-instansi .print-footer{margin-top:12px;font-size:10px;color:#94a3b8;text-align:right}
-
-/* ============ PRINT ============ */
+.btn-act{background:none;border:1px solid var(--border);border-radius:8px;padding:4px 8px;font:inherit;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;gap:3px;margin:1px}
+.btn-act svg{width:12px;height:12px}
+.btn-act.edit{border-color:var(--primary);color:var(--primary)}
+.btn-act.edit:hover{background:var(--primary);color:#fff}
+.btn-act.del{border-color:var(--bad);color:var(--bad)}
+.btn-act.del:hover{background:var(--bad);color:#fff}
+.act-cell{white-space:nowrap}
+.pw-reveal-btn,.pw-reset-btn{background:none;border:1px solid var(--border);border-radius:8px;padding:4px 10px;font:inherit;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.pw-reset-btn{color:var(--warn)}
+.pw-cell{display:flex;align-items:center;gap:6px}
+.pw-hash{font-family:monospace;font-size:11px;color:var(--muted);word-break:break-all;max-width:160px;overflow:hidden;text-overflow:ellipsis}
+.pw-hash.revealed{max-width:none;color:var(--text)}
+.pw-actions-cell{display:flex;gap:4px}
 #printArea{display:none}
-@media print{
-  body>*{display:none!important}
-  #printArea{display:block!important;padding:10mm}
-  #printArea h2{font-size:16px;margin-bottom:4px}
-  #printArea .sub{font-size:12px;color:#666;margin-bottom:12px}
-  #printArea table{width:100%;border-collapse:collapse;font-size:10px}
-  #printArea th,#printArea td{border:1px solid #ccc;padding:5px 6px;text-align:center}
-  #printArea th{background:#f3f4f6;font-weight:700}
-  #printArea td:nth-child(2),#printArea td:nth-child(3),#printArea td:nth-child(4){text-align:left}
-  #printArea .cell-check{font-size:12px}
-  #printArea .cell-check.ok{color:#059669}
-  #printArea .cell-check.bad{color:#dc2626}
-  @page{size:landscape;margin:8mm}
-}
-
-/* ============ TABLET ============ */
-@media(max-width:900px){
-  .userchip span.uname{display:none}
-  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .grid{grid-template-columns:1fr 1fr}
-  .antar-status-grid{grid-template-columns:1fr}
-  .lp-grid{grid-template-columns:1fr 1fr}
-  .card{padding:16px}
-}
-
-/* ============ MOBILE (<=640px) ============ */
+@media print{body>*{display:none!important}#printArea{display:block!important;padding:10mm}}
 @media(max-width:640px){
   .topbar{padding:6px 8px}
-  .tb-row{gap:4px}
   .brand b{font-size:13.5px;max-width:90px}
-  .brand-logo{width:30px;height:30px}
-  .hamburger-btn,.icon-btn{width:32px;height:32px}
-  /* Sembunyikan tombol sekunder di topbar mobile agar tidak overflow */
   #btnInstall{display:none!important}
   .tb-actions .db-dot{display:none}
+  .userchip .uname{display:none}
   main{padding:12px 10px calc(28px + env(safe-area-inset-bottom))}
-  .card{padding:14px;border-radius:14px;margin-bottom:12px}
-  .stat-num{font-size:18px}
-  .stat-card{padding:12px;gap:10px}
-  .stat-ic{width:36px;height:36px}
-  .stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-  .grid{grid-template-columns:1fr;gap:10px}
-  .lp-grid{grid-template-columns:1fr 1fr}
-  .tipe-group{flex-direction:column}
+  .card{padding:14px}
   .absensi-toolbar{flex-direction:column;align-items:stretch}
   .absensi-toolbar select,.absensi-toolbar input{width:100%}
-  .absensi-toolbar .btn-group{display:flex;gap:6px}
-  .absensi-toolbar .btn-group .btn-sm{flex:1;justify-content:center}
-  .tablewrap table{min-width:420px;font-size:12px}
-  th,td{padding:8px 8px}
-  .db-actions .btn-sm{min-width:0;flex:1 1 45%}
-  .db-sheet-grid{grid-template-columns:1fr}
-  .modal-box{padding:18px;width:min(400px,100%)}
-  .foto-actions .btn-sm{min-width:0}
 }
-
-/* HP sangat kecil */
-@media(max-width:380px){
-  .brand b{display:none}
-  .stats{grid-template-columns:1fr 1fr}
-  .userchip{max-width:36px}
+@media(max-width:380px){.brand b{display:none}}
+@media(prefers-reduced-motion:reduce){
+  *,.mobile-drawer,.hamburger-btn span,.tab.show{animation:none!important;transition:none!important}
 }
 </style>
 </head>
@@ -510,7 +392,7 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
       <div class="card">
         <div class="card-head"><div class="ch-ic"><span data-ic="users"></span></div><div><h2>Daftar Driver &amp; Kendaraan</h2></div></div>
         <div class="tablewrap"><table>
-          <thead><tr><th>#</th><th>Driver</th><th>No. Polisi</th><th>Tipe Kendaraan</th></tr></thead>
+          <thead><tr><th>#</th><th>Driver</th><th>No. Polisi</th><th>Tipe Kendaraan</th><th class="admin-only">Aksi</th></tr></thead>
           <tbody id="tabelDriver"></tbody>
         </table></div>
       </div>
@@ -544,30 +426,28 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
             </label>
           </div>
 
-          <!-- KATEGORI PK -->
+          <!-- KATEGORI PK (multi) -->
           <div class="kategori-section" id="kategoriPKSection">
-            <div class="ks-title"><span class="ks-badge pk">PK</span> Porsi Kecil — Kategori</div>
+            <div class="ks-title"><span class="ks-badge pk">PK</span> Porsi Kecil — pilih satu atau lebih kategori</div>
             <div class="chip-row" id="chipPK"></div>
-            <div class="lp-grid">
-              <div class="lp-item"><label>Laki-Laki</label><input type="number" name="pk_l" id="inpPK_L" min="0" value="0" oninput="calcPKTotal()"></div>
-              <div class="lp-item"><label>Perempuan</label><input type="number" name="pk_p" id="inpPK_P" min="0" value="0" oninput="calcPKTotal()"></div>
-              <div class="lp-total" id="pkTotalBox">Total PK: <span id="pkTotalVal">0</span></div>
-            </div>
+            <div class="kat-detail-list" id="detailPK"></div>
+            <div class="lp-total" id="pkTotalBox">Total PK: <span id="pkTotalVal">0</span> <small style="font-weight:600;color:var(--muted)">(L <span id="pkTotalL">0</span> + P <span id="pkTotalP">0</span>)</small></div>
           </div>
 
-          <!-- KATEGORI PB -->
+          <!-- KATEGORI PB (multi) -->
           <div class="kategori-section" id="kategoriPBSection">
-            <div class="ks-title"><span class="ks-badge pb">PB</span> Porsi Besar — Kategori</div>
+            <div class="ks-title"><span class="ks-badge pb">PB</span> Porsi Besar — pilih satu atau lebih kategori</div>
             <div class="chip-row" id="chipPB"></div>
-            <div class="lp-grid">
-              <div class="lp-item"><label>Laki-Laki</label><input type="number" name="pb_l" id="inpPB_L" min="0" value="0" oninput="calcPBTotal()"></div>
-              <div class="lp-item"><label>Perempuan</label><input type="number" name="pb_p" id="inpPB_P" min="0" value="0" oninput="calcPBTotal()"></div>
-              <div class="lp-total" id="pbTotalBox">Total PB: <span id="pbTotalVal">0</span></div>
-            </div>
+            <div class="kat-detail-list" id="detailPB"></div>
+            <div class="lp-total" id="pbTotalBox">Total PB: <span id="pbTotalVal">0</span> <small style="font-weight:600;color:var(--muted)">(L <span id="pbTotalL">0</span> + P <span id="pbTotalP">0</span>)</small></div>
           </div>
 
           <input type="hidden" name="pk" id="inpPK_Total" value="0">
           <input type="hidden" name="pb" id="inpPB_Total" value="0">
+          <input type="hidden" name="pk_l" id="inpPK_L" value="0">
+          <input type="hidden" name="pk_p" id="inpPK_P" value="0">
+          <input type="hidden" name="pb_l" id="inpPB_L" value="0">
+          <input type="hidden" name="pb_p" id="inpPB_P" value="0">
           <input type="hidden" name="kategori_pk" id="inpKategoriPK" value="">
           <input type="hidden" name="kategori_pb" id="inpKategoriPB" value="">
 
@@ -582,7 +462,7 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
       <div class="card">
         <div class="card-head"><div class="ch-ic"><span data-ic="home"></span></div><div><h2>Daftar Instansi</h2></div></div>
         <div class="tablewrap"><table>
-          <thead><tr><th>#</th><th>Instansi</th><th>Tipe</th><th>Kategori PK</th><th>Kategori PB</th><th>PK (L/P)</th><th>PB (L/P)</th><th>PIC</th><th>No. HP</th></tr></thead>
+          <thead><tr><th>#</th><th>Instansi</th><th>Tipe</th><th>Kategori PK</th><th>Kategori PB</th><th>PK (L/P)</th><th>PB (L/P)</th><th>PIC</th><th>No. HP</th><th class="admin-only">Aksi</th></tr></thead>
           <tbody id="tabelInstansi"></tbody>
         </table></div>
       </div>
@@ -641,11 +521,15 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
 
           <details class="sppg-config admin-only">
             <summary>Pengaturan Koordinat SPPG (Admin)</summary>
+            <p style="font-size:12px;color:var(--muted);margin:8px 0 10px">Lokasi gudang/titik awal. Disimpan ke sheet <b>Config</b> di database.</p>
             <div class="grid">
-              <div><label>SPPG Latitude</label><input type="text" id="sppgLat" placeholder="-6.200000"></div>
-              <div><label>SPPG Longitude</label><input type="text" id="sppgLng" placeholder="106.816667"></div>
+              <div><label>SPPG Latitude</label><input type="text" id="sppgLat" placeholder="-6.200000" inputmode="decimal"></div>
+              <div><label>SPPG Longitude</label><input type="text" id="sppgLng" placeholder="106.816667" inputmode="decimal"></div>
             </div>
-            <button type="button" class="btn btn-sm" id="btnSaveSppg" style="margin-top:10px"><span data-ic="save"></span><span class="btn-label">Simpan Koordinat</span></button>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap">
+              <button type="button" class="btn btn-sm" id="btnSaveSppg"><span data-ic="save"></span><span class="btn-label">Simpan ke Database</span></button>
+              <span id="sppgSourceHint" style="font-size:11px;font-weight:600;color:var(--muted)"></span>
+            </div>
           </details>
 
           <input type="hidden" name="lat" id="antarLat">
@@ -723,7 +607,7 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
       <div class="card">
         <div class="card-head"><div class="ch-ic"><span data-ic="clock"></span></div><div><h2>Riwayat Tugas Antaran</h2></div></div>
         <div class="tablewrap"><table>
-          <thead><tr><th>#</th><th>Tanggal</th><th>Driver</th><th>Instansi</th><th>PK</th><th>PB</th><th>Total</th><th>Status</th><th>Waktu Antar</th></tr></thead>
+          <thead><tr><th>#</th><th>Tanggal</th><th>Driver</th><th>Instansi</th><th>PK</th><th>PB</th><th>Total</th><th>Status</th><th>Waktu Antar</th><th class="admin-only">Aksi</th></tr></thead>
           <tbody id="tabelTugas"></tbody>
         </table></div>
       </div>
@@ -894,6 +778,85 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
   </main>
 </div>
 
+<!-- Modal Edit Driver -->
+<div class="modal-overlay" id="modalEditDriver">
+  <div class="modal-box">
+    <h3>Edit Driver</h3>
+    <p class="modal-sub">Perubahan disimpan ke sheet Driver_Kendaraan</p>
+    <input type="hidden" id="edDrv_id">
+    <div class="grid" style="grid-template-columns:1fr">
+      <div><label>Nama Driver *</label><input id="edDrv_nama" required></div>
+      <div><label>No. Polisi</label><input id="edDrv_nopol"></div>
+      <div><label>Tipe Kendaraan</label><input id="edDrv_tipe"></div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-sm btn-cancel" id="edDrvCancel">Batal</button>
+      <button type="button" class="btn btn-sm" id="edDrvSave"><span data-ic="save"></span><span class="btn-label">Simpan</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Edit Instansi -->
+<div class="modal-overlay" id="modalEditInstansi">
+  <div class="modal-box" style="max-width:520px">
+    <h3>Edit Instansi</h3>
+    <p class="modal-sub">Ubah data master (tanpa membuat riwayat PK/PB baru). Untuk ubah kuota dengan riwayat, pakai Ubah di Laporan.</p>
+    <input type="hidden" id="edIns_id">
+    <div class="grid" style="grid-template-columns:1fr 1fr">
+      <div style="grid-column:1/-1"><label>Nama Instansi *</label><input id="edIns_nama" required></div>
+      <div><label>PIC</label><input id="edIns_pic"></div>
+      <div><label>No. HP</label><input id="edIns_nohp"></div>
+      <div><label>Tipe</label><input id="edIns_tipe" placeholder="Posyandu / Sekolah/Ponpes"></div>
+      <div><label>Alamat</label><input id="edIns_alamat"></div>
+      <div style="grid-column:1/-1"><label>Kategori PK</label><input id="edIns_katpk" placeholder="Balita:12/8 | ATS &lt;9:5/3"></div>
+      <div style="grid-column:1/-1"><label>Kategori PB</label><input id="edIns_katpb"></div>
+      <div><label>PK L</label><input type="number" min="0" id="edIns_pkl" value="0"></div>
+      <div><label>PK P</label><input type="number" min="0" id="edIns_pkp" value="0"></div>
+      <div><label>PB L</label><input type="number" min="0" id="edIns_pbl" value="0"></div>
+      <div><label>PB P</label><input type="number" min="0" id="edIns_pbp" value="0"></div>
+      <div><label>Lat</label><input id="edIns_lat"></div>
+      <div><label>Lng</label><input id="edIns_lng"></div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-sm btn-cancel" id="edInsCancel">Batal</button>
+      <button type="button" class="btn btn-sm" id="edInsSave"><span data-ic="save"></span><span class="btn-label">Simpan</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Edit Tugas -->
+<div class="modal-overlay" id="modalEditTugas">
+  <div class="modal-box">
+    <h3>Edit Tugas Antaran</h3>
+    <input type="hidden" id="edTug_id">
+    <div class="grid" style="grid-template-columns:1fr 1fr">
+      <div style="grid-column:1/-1"><label>Driver</label><select id="edTug_driver"></select></div>
+      <div style="grid-column:1/-1"><label>Instansi</label><select id="edTug_instansi"></select></div>
+      <div><label>PK</label><input type="number" min="0" id="edTug_pk" value="0"></div>
+      <div><label>PB</label><input type="number" min="0" id="edTug_pb" value="0"></div>
+      <div><label>Status</label><select id="edTug_status"><option>Sukses</option><option>Pending</option><option>Gagal</option></select></div>
+      <div><label>Catatan</label><input id="edTug_catatan"></div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-sm btn-cancel" id="edTugCancel">Batal</button>
+      <button type="button" class="btn btn-sm" id="edTugSave"><span data-ic="save"></span><span class="btn-label">Simpan</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Konfirmasi Hapus -->
+<div class="modal-overlay" id="modalConfirmDel">
+  <div class="modal-box">
+    <h3>Hapus Data?</h3>
+    <p class="modal-sub" id="delConfirmText">Data akan dihapus permanen dari database.</p>
+    <input type="hidden" id="delKind"><input type="hidden" id="delId">
+    <div class="modal-actions">
+      <button type="button" class="btn btn-sm btn-cancel" id="delCancel">Batal</button>
+      <button type="button" class="btn btn-sm" id="delConfirm" style="background:var(--bad)"><span data-ic="x"></span><span class="btn-label">Hapus</span></button>
+    </div>
+  </div>
+</div>
+
 <!-- PRINT AREA (hidden, used for PDF export) -->
 <div id="printArea"></div>
 
@@ -901,7 +864,7 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
 
 <script>
 /* API_URL ganti dengan URL Web App kamu (akhiran /exec) */
-const API_URL = 'https://script.google.com/macros/s/AKfycbwpuo7g1CLzAwy-OL-CWHX5gHpD7yEKVJrzynQ-A1IbsL7Km7BI3Xsd7M4AC-zCgKPJ/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbyvDysVffnafFeAIrHIV8GDOITxJGC8_txN_yjh43s-Mwn70keciAHohLVLLtbp2xiZ/exec';
 const IN_APPS = typeof google !== 'undefined' && !!google.script && !!google.script.run;
 
 /* ============ IKON SVG ============ */
@@ -945,7 +908,7 @@ const ICONS = {
 const ic = n => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + (ICONS[n]||'') + '</svg>';
 const hydrate = root => (root||document).querySelectorAll('[data-ic]').forEach(el => el.innerHTML = ic(el.dataset.ic));
 
-/* ============ KATEGORI DATA ============ */
+/* ============ KATEGORI DATA (multi-pilih per kategori) ============ */
 const KATEGORI_MAP = {
   'Posyandu': {
     pk: ['Balita', 'ATS <9'],
@@ -957,62 +920,120 @@ const KATEGORI_MAP = {
   }
 };
 let _selectedTipe = '';
-let _selectedKatPK = '';
-let _selectedKatPB = '';
+/* Map kategori terpilih → { l, p } */
+let _katPK = {}; /* contoh: { 'Balita': {l:10,p:8}, 'ATS <9': {l:2,p:1} } */
+let _katPB = {};
 
 function selectTipe(tipe) {
   _selectedTipe = tipe;
-  /* Update tipe card visuals */
   document.querySelectorAll('.tipe-card').forEach(c => c.classList.remove('active'));
   if (tipe === 'Posyandu') $('#tipeCardPosyandu').classList.add('active');
   else $('#tipeCardSekolah').classList.add('active');
-  /* Set hidden radio */
-  document.querySelector('input[name=tipe][value="' + tipe + '"]').checked = true;
-  /* Show kategori sections */
+  var radio = document.querySelector('input[name=tipe][value="' + tipe + '"]');
+  if (radio) radio.checked = true;
   $('#kategoriPKSection').classList.add('show');
   $('#kategoriPBSection').classList.add('show');
-  /* Reset & render chips */
-  _selectedKatPK = '';
-  _selectedKatPB = '';
-  $('#inpKategoriPK').value = '';
-  $('#inpKategoriPB').value = '';
+  _katPK = {};
+  _katPB = {};
   renderChips('chipPK', KATEGORI_MAP[tipe].pk, 'pk');
   renderChips('chipPB', KATEGORI_MAP[tipe].pb, 'pb');
+  renderKatDetails('pk');
+  renderKatDetails('pb');
+  syncKatTotals('pk');
+  syncKatTotals('pb');
 }
 
 function renderChips(containerId, items, type) {
-  const container = $('#' + containerId);
-  container.innerHTML = items.map(item =>
-    '<label class="chip" onclick="selectChip(this, \'' + type + '\', \'' + esc(item) + '\')">' +
-    esc(item) + '</label>'
-  ).join('');
+  var container = $('#' + containerId);
+  var selected = type === 'pk' ? _katPK : _katPB;
+  container.innerHTML = items.map(function(item) {
+    var active = selected[item] ? ' active' : '';
+    var cls = type === 'pb' ? 'chip chip-pb' : 'chip';
+    return '<button type="button" class="' + cls + active + '" data-kat="' + esc(item) + '" data-type="' + type + '">' + esc(item) + '</button>';
+  }).join('');
+  container.querySelectorAll('.chip').forEach(function(btn) {
+    btn.addEventListener('click', function() { toggleKat(type, btn.dataset.kat, btn); });
+  });
 }
 
-function selectChip(el, type, value) {
-  const container = el.parentElement;
-  container.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
-  if (type === 'pk') {
-    _selectedKatPK = value;
-    $('#inpKategoriPK').value = value;
+function toggleKat(type, name, btn) {
+  var map = type === 'pk' ? _katPK : _katPB;
+  if (map[name]) {
+    delete map[name];
+    btn.classList.remove('active');
   } else {
-    _selectedKatPB = value;
-    $('#inpKategoriPB').value = value;
+    map[name] = { l: 0, p: 0 };
+    btn.classList.add('active');
+  }
+  renderKatDetails(type);
+  syncKatTotals(type);
+}
+
+function renderKatDetails(type) {
+  var map = type === 'pk' ? _katPK : _katPB;
+  var box = type === 'pk' ? $('#detailPK') : $('#detailPB');
+  var keys = Object.keys(map);
+  if (!keys.length) {
+    box.innerHTML = '<div style="font-size:12px;color:var(--muted);font-weight:600;padding:6px 2px">Pilih kategori di atas, lalu isi jumlah L/P per kategori</div>';
+    return;
+  }
+  box.innerHTML = keys.map(function(name) {
+    var d = map[name];
+    var idSafe = type + '_' + name.replace(/[^a-zA-Z0-9]/g, '_');
+    return '<div class="kat-row" data-kat="' + esc(name) + '">' +
+      '<div class="kr-name"><small>' + (type === 'pk' ? 'PK' : 'PB') + '</small>' + esc(name) + '</div>' +
+      '<div><label style="font-size:10px">Laki-laki</label><input type="number" min="0" value="' + (d.l || 0) + '" data-side="l" data-type="' + type + '" data-kat="' + esc(name) + '" id="' + idSafe + '_l"></div>' +
+      '<div><label style="font-size:10px">Perempuan</label><input type="number" min="0" value="' + (d.p || 0) + '" data-side="p" data-type="' + type + '" data-kat="' + esc(name) + '" id="' + idSafe + '_p"></div>' +
+      '<div class="kr-sub" id="' + idSafe + '_sub">' + ((d.l || 0) + (d.p || 0)) + '</div>' +
+      '</div>';
+  }).join('');
+  box.querySelectorAll('input[type=number]').forEach(function(inp) {
+    inp.addEventListener('input', function() {
+      var t = inp.dataset.type, n = inp.dataset.kat, side = inp.dataset.side;
+      var m = t === 'pk' ? _katPK : _katPB;
+      if (!m[n]) m[n] = { l: 0, p: 0 };
+      m[n][side] = Math.max(0, parseInt(inp.value, 10) || 0);
+      var subId = t + '_' + n.replace(/[^a-zA-Z0-9]/g, '_') + '_sub';
+      var subEl = document.getElementById(subId);
+      if (subEl) subEl.textContent = (m[n].l || 0) + (m[n].p || 0);
+      syncKatTotals(t);
+    });
+  });
+}
+
+function syncKatTotals(type) {
+  var map = type === 'pk' ? _katPK : _katPB;
+  var totalL = 0, totalP = 0;
+  var parts = [];
+  Object.keys(map).forEach(function(name) {
+    var l = map[name].l || 0, p = map[name].p || 0;
+    totalL += l; totalP += p;
+    /* Format simpan: Nama:L/P */
+    parts.push(name + ':' + l + '/' + p);
+  });
+  var total = totalL + totalP;
+  if (type === 'pk') {
+    $('#pkTotalVal').textContent = total;
+    $('#pkTotalL').textContent = totalL;
+    $('#pkTotalP').textContent = totalP;
+    $('#inpPK_Total').value = total;
+    $('#inpPK_L').value = totalL;
+    $('#inpPK_P').value = totalP;
+    $('#inpKategoriPK').value = parts.join(' | ');
+  } else {
+    $('#pbTotalVal').textContent = total;
+    $('#pbTotalL').textContent = totalL;
+    $('#pbTotalP').textContent = totalP;
+    $('#inpPB_Total').value = total;
+    $('#inpPB_L').value = totalL;
+    $('#inpPB_P').value = totalP;
+    $('#inpKategoriPB').value = parts.join(' | ');
   }
 }
 
-function calcPKTotal() {
-  const l = parseInt($('#inpPK_L').value) || 0;
-  const p = parseInt($('#inpPK_P').value) || 0;
-  $('#pkTotalVal').textContent = l + p;
-  $('#inpPK_Total').value = l + p;
-}
-function calcPBTotal() {
-  const l = parseInt($('#inpPB_L').value) || 0;
-  const p = parseInt($('#inpPB_P').value) || 0;
-  $('#pbTotalVal').textContent = l + p;
-  $('#inpPB_Total').value = l + p;
-}
+/* Kompat: fungsi lama dipanggil oninput (jika ada) */
+function calcPKTotal() { syncKatTotals('pk'); }
+function calcPBTotal() { syncKatTotals('pb'); }
 
 /* ============ API DUAL-MODE ============ */
 const $ = s => document.querySelector(s);
@@ -1101,16 +1122,30 @@ function haversineKm(lat1, lon1, lat2, lon2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-/* ============ SPPG COORDINATES ============ */
+/* ============ SPPG COORDINATES (cache lokal + database Config) ============ */
+var _sppgCache = null;
 function getSPPG() {
+  if (_sppgCache && _sppgCache.lat != null && _sppgCache.lng != null) return _sppgCache;
   try {
-    const s = JSON.parse(localStorage.getItem('dt_sppg'));
-    if (s && s.lat && s.lng) return s;
-  } catch(e) {}
-  return { lat: -6.200000, lng: 106.816667 };
+    var s = JSON.parse(localStorage.getItem('dt_sppg'));
+    if (s && s.lat != null && s.lng != null) { _sppgCache = s; return s; }
+  } catch (e) {}
+  return { lat: -6.200000, lng: 106.816667, source: 'default' };
 }
-function setSPPG(lat, lng) {
-  try { localStorage.setItem('dt_sppg', JSON.stringify({ lat, lng })); } catch(e) {}
+function setSPPGLocal(lat, lng, source) {
+  _sppgCache = { lat: lat, lng: lng, source: source || 'local' };
+  try { localStorage.setItem('dt_sppg', JSON.stringify(_sppgCache)); } catch (e) {}
+}
+async function loadSPPGFromDB() {
+  try {
+    var r = await apiCall('get_sppg');
+    var d = r.data || r;
+    if (d && d.lat != null && d.lng != null) {
+      setSPPGLocal(parseFloat(d.lat), parseFloat(d.lng), d.source || 'database');
+      return _sppgCache;
+    }
+  } catch (e) {}
+  return getSPPG();
 }
 
 /* ============ GPS ============ */
@@ -1304,25 +1339,35 @@ function fotoSizeLabel(dataUrl) {
 /* ============ DATA ============ */
 const state = { drivers:[], instansi:[], tugas:[], absensi:[], distribusi:[], registrasi:[], absensiMatrix:null, dbInfo:null };
 
+function isAdminSess() {
+  var s = sess();
+  return s && String(s.role || '').toLowerCase() === 'admin';
+}
+function actBtns(kind, id) {
+  if (!isAdminSess()) return '';
+  return '<td class="act-cell admin-only">' +
+    '<button type="button" class="btn-act edit" onclick="openEdit(\'' + kind + '\',\'' + esc(id) + '\')"><span data-ic="edit"></span> Edit</button> ' +
+    '<button type="button" class="btn-act del" onclick="confirmDelete(\'' + kind + '\',\'' + esc(id) + '\')"><span data-ic="x"></span> Hapus</button></td>';
+}
 async function loadDrivers() {
-  $('#tabelDriver').innerHTML = skelRows(3, 4);
+  $('#tabelDriver').innerHTML = skelRows(3, 5);
   const { data } = await apiCall('drivers');
   state.drivers = data;
   $('#tabelDriver').innerHTML = data.length ? data.map((d,i) => `
     <tr><td>${i+1}</td><td><div class="cell-main">${esc(d.nama)}</div></td>
     <td>${d.nopol ? `<div class="cell-sub">${esc(d.nopol)}</div>` : '—'}</td>
-    <td>${esc(d.tipe || '—')}</td></tr>`).join('')
-    : emptyRow(4, 'Belum ada driver — tambahkan lewat form di atas');
+    <td>${esc(d.tipe || '—')}</td>${actBtns('driver', d.id)}</tr>`).join('')
+    : emptyRow(isAdminSess() ? 5 : 4, 'Belum ada driver — tambahkan lewat form di atas');
   $('#selTugasDriver').innerHTML = '<option value="">— Pilih Driver —</option>' +
     data.map(d => `<option value="${esc(d.id)}">${esc(d.nama)}${d.nopol ? ' (' + esc(d.nopol) + ')' : ''}</option>`).join('');
-  /* Juga isi select untuk Antar (driver sendiri) */
   const s = sess();
   if (s && s.role === 'driver') {
     $('#selAntarInstansi').dataset.driverId = s.id_driver || '';
   }
+  hydrate($('#tabelDriver'));
 }
 async function loadInstansi() {
-  $('#tabelInstansi').innerHTML = skelRows(3, 9);
+  $('#tabelInstansi').innerHTML = skelRows(3, 10);
   const { data } = await apiCall('instansi');
   state.instansi = data;
   $('#tabelInstansi').innerHTML = data.length ? data.map((d,i) => `
@@ -1334,16 +1379,17 @@ async function loadInstansi() {
     <td><b>${d.pk}</b> <span style="color:var(--muted);font-size:11px">(${d.pk_l}L/${d.pk_p}P)</span></td>
     <td><b>${d.pb}</b> <span style="color:var(--muted);font-size:11px">(${d.pb_l}L/${d.pb_p}P)</span></td>
     <td>${esc(d.pic || '—')}</td>
-    <td>${d.nohp ? `<div class="cell-sub">${ic('phone')}${esc(d.nohp)}</div>` : '—'}</td></tr>`).join('')
-    : emptyRow(9, 'Belum ada instansi');
-  /* Isi select untuk Tugas & Antar */
+    <td>${d.nohp ? `<div class="cell-sub">${ic('phone')}${esc(d.nohp)}</div>` : '—'}</td>
+    ${actBtns('instansi', d.id)}</tr>`).join('')
+    : emptyRow(isAdminSess() ? 10 : 9, 'Belum ada instansi');
   const insOpts = '<option value="">— Pilih Instansi —</option>' +
     data.map(d => '<option value="' + esc(d.id) + '" data-pk="' + d.pk + '" data-pb="' + d.pb + '" data-tipe="' + esc(d.tipe) + '" data-kat-pk="' + esc(d.kategori_pk) + '" data-kat-pb="' + esc(d.kategori_pb) + '">' + esc(d.nama) + ' [' + (d.tipe || '-') + '] PK:' + d.pk + ' PB:' + d.pb + '</option>').join('');
   $('#selTugasInstansi').innerHTML = insOpts;
   $('#selAntarInstansi').innerHTML = insOpts;
+  hydrate($('#tabelInstansi'));
 }
 async function loadTugas() {
-  $('#tabelTugas').innerHTML = skelRows(4, 9);
+  $('#tabelTugas').innerHTML = skelRows(4, 10);
   const { data } = await apiCall('tugas');
   state.tugas = data;
   $('#tabelTugas').innerHTML = data.length ? data.map((r,i) => `
@@ -1351,8 +1397,10 @@ async function loadTugas() {
     <td><div class="cell-main">${esc(r.driver)}</div><div class="cell-sub">${esc(r.nopol)}</div></td>
     <td><div class="cell-main">${esc(r.instansi)}</div>${r.catatan ? `<div class="cell-sub">${esc(r.catatan)}</div>` : ''}</td>
     <td>${r.pk}</td><td>${r.pb}</td><td><b>${r.total}</b></td>
-    <td>${statBadge(r.status)}</td><td>${esc(r.waktu_antar || '—')}</td></tr>`).join('')
-    : emptyRow(9, 'Belum ada tugas antaran');
+    <td>${statBadge(r.status)}</td><td>${esc(r.waktu_antar || '—')}</td>
+    ${actBtns('tugas', r.id)}</tr>`).join('')
+    : emptyRow(isAdminSess() ? 10 : 9, 'Belum ada tugas antaran');
+  hydrate($('#tabelTugas'));
 }
 async function loadDistribusi() {
   $('#tabelDistribusi').innerHTML = skelRows(3, 11);
@@ -2037,20 +2085,31 @@ function switchTab(name, skipSave) {
 }
 
 /* ============ SPPG FIELD INIT ============ */
-function initSPPGFields() {
-  const sppg = getSPPG();
-  const latEl = $('#sppgLat'), lngEl = $('#sppgLng');
+async function initSPPGFields() {
+  await loadSPPGFromDB();
+  var sppg = getSPPG();
+  var latEl = $('#sppgLat'), lngEl = $('#sppgLng');
   if (latEl) latEl.value = sppg.lat;
   if (lngEl) lngEl.value = sppg.lng;
+  var hint = $('#sppgSourceHint');
+  if (hint) hint.textContent = sppg.source === 'database' ? 'Tersimpan di database' : 'Default (belum disimpan admin)';
+  updateJarak();
 }
-function saveSPPGFields() {
-  const lat = parseFloat($('#sppgLat').value);
-  const lng = parseFloat($('#sppgLng').value);
-  if (!isNaN(lat) && !isNaN(lng)) {
-    setSPPG(lat, lng);
+async function saveSPPGFields() {
+  var lat = parseFloat($('#sppgLat').value);
+  var lng = parseFloat($('#sppgLng').value);
+  if (isNaN(lat) || isNaN(lng)) { toast('Latitude & Longitude wajib diisi', false); return; }
+  var btn = $('#btnSaveSppg');
+  if (btn) { btn.disabled = true; btn.classList.add('loading'); }
+  try {
+    var r = await apiCall('set_sppg', { lat: lat, lng: lng, by: (sess() || {}).username || '' });
+    setSPPGLocal(lat, lng, 'database');
     updateJarak();
-    toast('Koordinat SPPG diperbarui', true);
-  }
+    var hint = $('#sppgSourceHint');
+    if (hint) hint.textContent = 'Tersimpan di database';
+    toast(r.message || 'Koordinat SPPG disimpan ke database', true);
+  } catch (e) { toast(e.message, false); }
+  finally { if (btn) { btn.disabled = false; btn.classList.remove('loading'); } }
 }
 
 /* ============ SESSION FLOW ============ */
@@ -2069,6 +2128,7 @@ function enterApp() {
   $('#userName').textContent = s.nama || s.username;
   $('#userAva').textContent = (s.nama || s.username || 'A').charAt(0).toUpperCase();
   initAbsensiControls();
+  loadSPPGFromDB().catch(function() {});
   /* Auto-check & repair DB di background */
   apiCall('auto_setup', { force: false }).then(({ data }) => {
     if (data && data.created && data.created.length) {
@@ -2135,24 +2195,31 @@ $('#loginPwToggle').addEventListener('click', function() {
 /* ============ RESET INSTANSI FORM ============ */
 function resetInstansiForm() {
   _selectedTipe = '';
-  _selectedKatPK = '';
-  _selectedKatPB = '';
+  _katPK = {};
+  _katPB = {};
   document.querySelectorAll('.tipe-card').forEach(c => c.classList.remove('active'));
-  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
   $('#kategoriPKSection').classList.remove('show');
   $('#kategoriPBSection').classList.remove('show');
   $('#chipPK').innerHTML = '';
   $('#chipPB').innerHTML = '';
+  $('#detailPK').innerHTML = '';
+  $('#detailPB').innerHTML = '';
   $('#inpPK_L').value = 0;
   $('#inpPK_P').value = 0;
   $('#inpPB_L').value = 0;
   $('#inpPB_P').value = 0;
   $('#pkTotalVal').textContent = '0';
   $('#pbTotalVal').textContent = '0';
+  if ($('#pkTotalL')) $('#pkTotalL').textContent = '0';
+  if ($('#pkTotalP')) $('#pkTotalP').textContent = '0';
+  if ($('#pbTotalL')) $('#pbTotalL').textContent = '0';
+  if ($('#pbTotalP')) $('#pbTotalP').textContent = '0';
   $('#inpPK_Total').value = '0';
   $('#inpPB_Total').value = '0';
   $('#inpKategoriPK').value = '';
   $('#inpKategoriPB').value = '';
+  var tipeRadios = document.querySelectorAll('input[name=tipe]');
+  tipeRadios.forEach(function(r) { r.checked = false; });
 }
 
 /* ============ EVENTS ============ */
@@ -2502,6 +2569,152 @@ $('#btnInstall').onclick = async () => {
   await deferredPrompt.userChoice;
   deferredPrompt = null; $('#btnInstall').hidden = true;
 };
+
+/* ============ EDIT / HAPUS (admin only, server-enforced) ============ */
+function openModal(id) { var el = $(id); if (el) el.classList.add('show'); }
+function closeModal(id) { var el = $(id); if (el) el.classList.remove('show'); }
+function openEdit(kind, id) {
+  if (!isAdminSess()) { toast('Hanya admin', false); return; }
+  if (kind === 'driver') {
+    var d = (state.drivers || []).find(function(x) { return x.id === id; });
+    if (!d) return;
+    $('#edDrv_id').value = d.id;
+    $('#edDrv_nama').value = d.nama || '';
+    $('#edDrv_nopol').value = d.nopol || '';
+    $('#edDrv_tipe').value = d.tipe || '';
+    openModal('#modalEditDriver');
+  } else if (kind === 'instansi') {
+    var ins = (state.instansi || []).find(function(x) { return x.id === id; });
+    if (!ins) return;
+    $('#edIns_id').value = ins.id;
+    $('#edIns_nama').value = ins.nama || '';
+    $('#edIns_pic').value = ins.pic || '';
+    $('#edIns_nohp').value = ins.nohp || '';
+    $('#edIns_tipe').value = ins.tipe || '';
+    $('#edIns_alamat').value = ins.alamat || '';
+    $('#edIns_katpk').value = ins.kategori_pk || '';
+    $('#edIns_katpb').value = ins.kategori_pb || '';
+    $('#edIns_pkl').value = ins.pk_l || 0;
+    $('#edIns_pkp').value = ins.pk_p || 0;
+    $('#edIns_pbl').value = ins.pb_l || 0;
+    $('#edIns_pbp').value = ins.pb_p || 0;
+    $('#edIns_lat').value = ins.lat || '';
+    $('#edIns_lng').value = ins.lng || '';
+    openModal('#modalEditInstansi');
+  } else if (kind === 'tugas') {
+    var t = (state.tugas || []).find(function(x) { return x.id === id; });
+    if (!t) return;
+    $('#edTug_id').value = t.id;
+    $('#edTug_driver').innerHTML = (state.drivers || []).map(function(d) {
+      return '<option value="' + esc(d.id) + '"' + (d.id === t.id_driver ? ' selected' : '') + '>' + esc(d.nama) + '</option>';
+    }).join('');
+    $('#edTug_instansi').innerHTML = (state.instansi || []).map(function(d) {
+      return '<option value="' + esc(d.id) + '"' + (d.id === t.id_instansi ? ' selected' : '') + '>' + esc(d.nama) + '</option>';
+    }).join('');
+    $('#edTug_pk').value = t.pk || 0;
+    $('#edTug_pb').value = t.pb || 0;
+    $('#edTug_status').value = t.status || 'Pending';
+    $('#edTug_catatan').value = t.catatan || '';
+    openModal('#modalEditTugas');
+  }
+}
+function confirmDelete(kind, id) {
+  if (!isAdminSess()) { toast('Hanya admin', false); return; }
+  $('#delKind').value = kind;
+  $('#delId').value = id;
+  var label = kind + ' ' + id;
+  if (kind === 'driver') {
+    var d = (state.drivers || []).find(function(x) { return x.id === id; });
+    if (d) label = 'driver "' + d.nama + '"';
+  } else if (kind === 'instansi') {
+    var ins = (state.instansi || []).find(function(x) { return x.id === id; });
+    if (ins) label = 'instansi "' + ins.nama + '"';
+  } else if (kind === 'tugas') {
+    label = 'tugas ' + id;
+  }
+  $('#delConfirmText').textContent = 'Hapus ' + label + ' secara permanen dari database?';
+  openModal('#modalConfirmDel');
+}
+async function saveEditDriver() {
+  if (!isAdminSess()) return;
+  var btn = $('#edDrvSave'); btn.disabled = true; btn.classList.add('loading');
+  try {
+    var r = await apiCall('update_driver', {
+      id: $('#edDrv_id').value, nama: $('#edDrv_nama').value,
+      nopol: $('#edDrv_nopol').value, tipe: $('#edDrv_tipe').value,
+      by: (sess() || {}).username || ''
+    });
+    toast(r.message, true);
+    closeModal('#modalEditDriver');
+    await loadDrivers();
+  } catch (e) { toast(e.message, false); }
+  finally { btn.disabled = false; btn.classList.remove('loading'); }
+}
+async function saveEditInstansi() {
+  if (!isAdminSess()) return;
+  var btn = $('#edInsSave'); btn.disabled = true; btn.classList.add('loading');
+  try {
+    var r = await apiCall('update_instansi_meta', {
+      id: $('#edIns_id').value, nama: $('#edIns_nama').value,
+      pic: $('#edIns_pic').value, nohp: $('#edIns_nohp').value,
+      tipe: $('#edIns_tipe').value, alamat: $('#edIns_alamat').value,
+      kategori_pk: $('#edIns_katpk').value, kategori_pb: $('#edIns_katpb').value,
+      pk_l: $('#edIns_pkl').value, pk_p: $('#edIns_pkp').value,
+      pb_l: $('#edIns_pbl').value, pb_p: $('#edIns_pbp').value,
+      lat: $('#edIns_lat').value, lng: $('#edIns_lng').value,
+      by: (sess() || {}).username || ''
+    });
+    toast(r.message, true);
+    closeModal('#modalEditInstansi');
+    await Promise.all([loadInstansi(), loadLaporan ? loadLaporan() : Promise.resolve()]);
+  } catch (e) { toast(e.message, false); }
+  finally { btn.disabled = false; btn.classList.remove('loading'); }
+}
+async function saveEditTugas() {
+  if (!isAdminSess()) return;
+  var btn = $('#edTugSave'); btn.disabled = true; btn.classList.add('loading');
+  try {
+    var r = await apiCall('update_tugas', {
+      id: $('#edTug_id').value,
+      id_driver: $('#edTug_driver').value,
+      id_instansi: $('#edTug_instansi').value,
+      pk: $('#edTug_pk').value, pb: $('#edTug_pb').value,
+      status: $('#edTug_status').value, catatan: $('#edTug_catatan').value,
+      by: (sess() || {}).username || ''
+    });
+    toast(r.message, true);
+    closeModal('#modalEditTugas');
+    await Promise.all([loadTugas(), loadDashboard()]);
+  } catch (e) { toast(e.message, false); }
+  finally { btn.disabled = false; btn.classList.remove('loading'); }
+}
+async function doDelete() {
+  if (!isAdminSess()) return;
+  var kind = $('#delKind').value, id = $('#delId').value;
+  var action = kind === 'driver' ? 'delete_driver' : kind === 'instansi' ? 'delete_instansi' : 'delete_tugas';
+  var btn = $('#delConfirm'); btn.disabled = true; btn.classList.add('loading');
+  try {
+    var r = await apiCall(action, { id: id, by: (sess() || {}).username || '' });
+    toast(r.message, true);
+    closeModal('#modalConfirmDel');
+    if (kind === 'driver') await loadDrivers();
+    else if (kind === 'instansi') await Promise.all([loadInstansi(), typeof loadLaporan === 'function' ? loadLaporan() : Promise.resolve()]);
+    else await Promise.all([loadTugas(), loadDashboard()]);
+  } catch (e) { toast(e.message, false); }
+  finally { btn.disabled = false; btn.classList.remove('loading'); }
+}
+$('#edDrvCancel').addEventListener('click', function() { closeModal('#modalEditDriver'); });
+$('#edDrvSave').addEventListener('click', saveEditDriver);
+$('#modalEditDriver').addEventListener('click', function(e) { if (e.target === e.currentTarget) closeModal('#modalEditDriver'); });
+$('#edInsCancel').addEventListener('click', function() { closeModal('#modalEditInstansi'); });
+$('#edInsSave').addEventListener('click', saveEditInstansi);
+$('#modalEditInstansi').addEventListener('click', function(e) { if (e.target === e.currentTarget) closeModal('#modalEditInstansi'); });
+$('#edTugCancel').addEventListener('click', function() { closeModal('#modalEditTugas'); });
+$('#edTugSave').addEventListener('click', saveEditTugas);
+$('#modalEditTugas').addEventListener('click', function(e) { if (e.target === e.currentTarget) closeModal('#modalEditTugas'); });
+$('#delCancel').addEventListener('click', function() { closeModal('#modalConfirmDel'); });
+$('#delConfirm').addEventListener('click', doDelete);
+$('#modalConfirmDel').addEventListener('click', function(e) { if (e.target === e.currentTarget) closeModal('#modalConfirmDel'); });
 
 /* ============ INIT ============ */
 hydrate();
