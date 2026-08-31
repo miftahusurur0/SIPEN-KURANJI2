@@ -10,6 +10,7 @@
 <meta name="apple-mobile-web-app-title" content="DeliTrack">
 <title>DeliTrack — Distribusi &amp; Absensi</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 <style>
 :root{
   --bg:#eef2f7;--surface:#fff;--surface-2:#f4f6fb;--text:#0f172a;--muted:#64748b;
@@ -183,14 +184,21 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
 .compass-sub{font-size:11px;color:var(--muted);font-weight:600}
 .compass-box.inactive .compass-needle{opacity:.35}
 @media(min-width:640px){.antar-status-grid{grid-template-columns:1fr 1fr 1fr}}
-.foto-area{margin-top:14px;border:2px dashed var(--border);border-radius:13px;padding:20px;text-align:center;cursor:pointer;position:relative;min-height:120px;display:grid;place-items:center;transition:border-color .2s;touch-action:manipulation}
-.foto-area:hover{border-color:var(--primary)}
+.foto-area{margin-top:14px;border:2px dashed var(--border);border-radius:13px;padding:20px;text-align:center;position:relative;min-height:120px;display:grid;place-items:center;transition:border-color .2s;touch-action:manipulation;cursor:default}
 .foto-area.has-img{padding:8px;border-style:solid}
 .foto-area.is-processing{opacity:.75;pointer-events:none;border-color:var(--primary)}
 .foto-area.is-processing .placeholder svg{animation:spin .8s linear infinite}
 .foto-area img{max-width:100%;max-height:220px;border-radius:10px;object-fit:contain;display:block;margin:0 auto}
-.foto-area .placeholder{color:var(--muted);font-size:13px;font-weight:600}
+.foto-area .placeholder{color:var(--muted);font-size:13px;font-weight:600;pointer-events:none}
 .foto-area .placeholder svg{width:36px;height:36px;opacity:.4;margin-bottom:6px}
+.map-wrap{margin-top:12px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--surface-2)}
+.map-wrap .map-el{width:100%;height:220px;min-height:200px;z-index:1}
+.map-wrap .map-legend{display:flex;gap:12px;flex-wrap:wrap;padding:8px 12px;font-size:11px;font-weight:600;color:var(--muted);border-top:1px solid var(--border)}
+.map-wrap .map-legend span{display:inline-flex;align-items:center;gap:5px}
+.map-wrap .map-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.map-wrap .map-dot.me{background:#4f46e5}
+.map-wrap .map-dot.sppg{background:#ef4444}
+.map-wrap .map-dist{margin-left:auto;color:var(--primary);font-weight:800}
 .foto-size-label{font-size:11px;font-weight:600;color:var(--ok);margin-top:6px;text-align:center}
 .foto-meta{margin-top:8px;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;font-size:12px;display:none}
 .foto-meta.show{display:block}
@@ -526,18 +534,28 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
 
           <div style="margin-top:14px"><label>Foto Bukti Antar *</label>
             <div class="foto-area" id="antarFotoArea">
-              <div class="placeholder" id="antarFotoPlaceholder"><span data-ic="camera"></span><div>Ambil foto atau upload gambar</div></div>
-              <input type="file" accept="image/jpeg,image/png,image/webp,image/*" id="antarFoto" style="display:none">
-              <input type="file" accept="image/jpeg,image/png,image/webp,image/*" capture="environment" id="antarFotoCam" style="display:none">
+              <div class="placeholder" id="antarFotoPlaceholder"><span data-ic="camera"></span><div>Gunakan tombol Kamera atau Upload di bawah</div></div>
             </div>
+            <!-- input di luar area agar klik tidak bentrok -->
+            <input type="file" accept="image/*" capture="environment" id="antarFotoCam" style="display:none">
+            <input type="file" accept="image/jpeg,image/png,image/webp,image/*" id="antarFoto" style="display:none">
             <div class="foto-actions">
               <button type="button" class="btn btn-sm" id="btnAntarCam" style="background:var(--grad)"><span data-ic="camera"></span><span class="btn-label">Kamera</span></button>
-              <button type="button" class="btn btn-sm" id="btnAntarUpload" style="background:#0ea5e9"><span data-ic="download"></span><span class="btn-label">Upload</span></button>
+              <button type="button" class="btn btn-sm" id="btnAntarUpload" style="background:#0ea5e9"><span data-ic="download"></span><span class="btn-label">Upload Galeri</span></button>
             </div>
             <div class="foto-meta" id="antarFotoMeta">
               <div class="fm-row"><span class="fm-l">Waktu foto</span><span class="fm-v" id="antarFotoWaktu">—</span></div>
-              <div class="fm-row"><span class="fm-l">Lokasi upload</span><span class="fm-v" id="antarFotoLokasi">—</span></div>
+              <div class="fm-row"><span class="fm-l">Lokasi</span><span class="fm-v" id="antarFotoLokasi">—</span></div>
               <div class="fm-row"><span class="fm-l">Jarak ke SPPG</span><span class="fm-v" id="antarFotoJarak">—</span></div>
+            </div>
+          </div>
+
+          <div class="map-wrap" id="antarMapWrap">
+            <div class="map-el" id="antarMap"></div>
+            <div class="map-legend">
+              <span><i class="map-dot me"></i> Lokasi Anda</span>
+              <span><i class="map-dot sppg"></i> SPPG</span>
+              <span class="map-dist" id="antarMapDist">Jarak: —</span>
             </div>
           </div>
 
@@ -605,18 +623,27 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
           <div style="margin-top:14px"><label>Catatan Pengambilan</label><input name="catatan" id="jemputCatatan" placeholder="opsional"></div>
           <div style="margin-top:14px"><label>Foto Bukti Pengambilan *</label>
             <div class="foto-area" id="jemputFotoArea">
-              <div class="placeholder" id="jemputFotoPlaceholder"><span data-ic="camera"></span><div>Ambil foto atau upload gambar</div></div>
-              <input type="file" accept="image/jpeg,image/png,image/webp,image/*" id="jemputFoto" style="display:none">
-              <input type="file" accept="image/jpeg,image/png,image/webp,image/*" capture="environment" id="jemputFotoCam" style="display:none">
+              <div class="placeholder" id="jemputFotoPlaceholder"><span data-ic="camera"></span><div>Gunakan tombol Kamera atau Upload di bawah</div></div>
             </div>
+            <input type="file" accept="image/*" capture="environment" id="jemputFotoCam" style="display:none">
+            <input type="file" accept="image/jpeg,image/png,image/webp,image/*" id="jemputFoto" style="display:none">
             <div class="foto-actions">
               <button type="button" class="btn btn-sm" id="btnJemputCam" style="background:var(--grad)"><span data-ic="camera"></span><span class="btn-label">Kamera</span></button>
-              <button type="button" class="btn btn-sm" id="btnJemputUpload" style="background:#0ea5e9"><span data-ic="download"></span><span class="btn-label">Upload</span></button>
+              <button type="button" class="btn btn-sm" id="btnJemputUpload" style="background:#0ea5e9"><span data-ic="download"></span><span class="btn-label">Upload Galeri</span></button>
             </div>
             <div class="foto-meta" id="jemputFotoMeta">
               <div class="fm-row"><span class="fm-l">Waktu foto</span><span class="fm-v" id="jemputFotoWaktu">—</span></div>
-              <div class="fm-row"><span class="fm-l">Lokasi upload</span><span class="fm-v" id="jemputFotoLokasi">—</span></div>
+              <div class="fm-row"><span class="fm-l">Lokasi</span><span class="fm-v" id="jemputFotoLokasi">—</span></div>
               <div class="fm-row"><span class="fm-l">Jarak ke SPPG</span><span class="fm-v" id="jemputFotoJarak">—</span></div>
+            </div>
+          </div>
+
+          <div class="map-wrap" id="jemputMapWrap">
+            <div class="map-el" id="jemputMap"></div>
+            <div class="map-legend">
+              <span><i class="map-dot me"></i> Lokasi Anda</span>
+              <span><i class="map-dot sppg"></i> SPPG</span>
+              <span class="map-dist" id="jemputMapDist">Jarak: —</span>
             </div>
           </div>
           <div class="antar-status-grid">
@@ -924,9 +951,10 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
 
 <div id="toast" class="toast"></div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
 /* API_URL ganti dengan URL Web App kamu (akhiran /exec) */
-const API_URL = 'https://script.google.com/macros/s/AKfycbxZefVpckkANyRTg6P9RB6xevlYF_pvzkvjCrilVUF7RYjnvUlIoriM5zkwve7pNg7G/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbznbphx2Huxfzy0ecTCP_9-r2_KrEzV8BkIbqN-r9hIT3jx6sfp7Pt_kZizyIGtlpMQ/exec';
 const IN_APPS = typeof google !== 'undefined' && !!google.script && !!google.script.run;
 
 /* ============ IKON SVG ============ */
@@ -1468,6 +1496,57 @@ function updateJarak() {
   if (coordEl) {
     coordEl.textContent = 'SPPG: ' + Number(sppg.lat).toFixed(5) + ', ' + Number(sppg.lng).toFixed(5) +
       (gpsAcc != null ? ' · Akurasi: ' + accLabel(gpsAcc) : '');
+  }
+  renderLocMap('antar', gpsLat, gpsLng, km);
+}
+
+/* ============ MAPS (Leaflet + OSM) ============ */
+var _maps = {};
+function renderLocMap(prefix, lat, lng, km) {
+  var elId = prefix + 'Map';
+  var distId = prefix + 'MapDist';
+  var el = document.getElementById(elId);
+  if (!el || typeof L === 'undefined') {
+    if (document.getElementById(distId) && km != null) {
+      document.getElementById(distId).textContent = 'Jarak: ' + (km < 1 ? (km * 1000).toFixed(0) + ' m' : km.toFixed(2) + ' km');
+    }
+    return;
+  }
+  var sppg = getSPPG();
+  var distEl = document.getElementById(distId);
+  if (distEl && km != null) {
+    distEl.textContent = 'Jarak: ' + (km < 1 ? (km * 1000).toFixed(0) + ' m' : km.toFixed(2) + ' km');
+  }
+  try {
+    if (!_maps[prefix]) {
+      _maps[prefix] = {
+        map: L.map(elId, { zoomControl: true, attributionControl: true }),
+        layer: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; OpenStreetMap'
+        }),
+        me: null,
+        sppg: null,
+        line: null
+      };
+      _maps[prefix].layer.addTo(_maps[prefix].map);
+    }
+    var m = _maps[prefix];
+    var meLatLng = [lat, lng];
+    var sppgLatLng = [sppg.lat, sppg.lng];
+    if (!m.me) {
+      m.me = L.circleMarker(meLatLng, { radius: 9, color: '#fff', weight: 2, fillColor: '#4f46e5', fillOpacity: 1 }).addTo(m.map).bindPopup('Lokasi Anda');
+      m.sppg = L.circleMarker(sppgLatLng, { radius: 9, color: '#fff', weight: 2, fillColor: '#ef4444', fillOpacity: 1 }).addTo(m.map).bindPopup('SPPG');
+      m.line = L.polyline([meLatLng, sppgLatLng], { color: '#4f46e5', weight: 3, dashArray: '6 6', opacity: 0.85 }).addTo(m.map);
+    } else {
+      m.me.setLatLng(meLatLng);
+      m.sppg.setLatLng(sppgLatLng);
+      m.line.setLatLngs([meLatLng, sppgLatLng]);
+    }
+    m.map.fitBounds(L.latLngBounds([meLatLng, sppgLatLng]).pad(0.35));
+    setTimeout(function() { try { m.map.invalidateSize(); } catch (_) {} }, 200);
+  } catch (err) {
+    console.warn('Map error', err);
   }
 }
 
@@ -2681,21 +2760,30 @@ function resetFotoUI(opts) {
   var cam = $(opts.camId); if (cam) cam.value = '';
 }
 
-/* Antar: kamera / upload */
-$('#btnAntarCam').addEventListener('click', function() { $('#antarFotoCam').click(); });
-$('#btnAntarUpload').addEventListener('click', function() { $('#antarFoto').click(); });
-$('#antarFotoArea').addEventListener('click', function(e) {
-  if (e.target.tagName === 'IMG' || e.target.closest('button')) return;
-  $('#antarFoto').click();
+/* Antar: kamera vs upload — terpisah, input di-reset agar change selalu fire */
+function pickFoto(inputEl) {
+  if (!inputEl) return;
+  try { inputEl.value = ''; } catch (_) {}
+  inputEl.click();
+}
+$('#btnAntarCam').addEventListener('click', function(e) {
+  e.preventDefault(); e.stopPropagation();
+  pickFoto($('#antarFotoCam'));
+});
+$('#btnAntarUpload').addEventListener('click', function(e) {
+  e.preventDefault(); e.stopPropagation();
+  pickFoto($('#antarFoto'));
 });
 async function onAntarFotoChange() {
   var file = this.files && this.files[0];
+  if (!file) return;
   await handleFotoFile(file, {
     setBase64: function(v) { antarFotoBase64 = v; },
     areaId: 'antarFotoArea', placeholderId: 'antarFotoPlaceholder', previewId: 'antarFotoPreview',
     inputId: 'antarFoto', camId: 'antarFotoCam', metaId: 'antarFotoMeta',
     onReady: function() { fillFotoMeta('antar', gpsLat, gpsLng); }
   });
+  try { this.value = ''; } catch (_) {}
 }
 $('#antarFoto').addEventListener('change', onAntarFotoChange);
 $('#antarFotoCam').addEventListener('change', onAntarFotoChange);
@@ -2719,6 +2807,11 @@ function setAntarMode(mode) {
   } else {
     fetchGPS();
   }
+  setTimeout(function() {
+    Object.keys(_maps).forEach(function(k) {
+      try { _maps[k].map.invalidateSize(); } catch (_) {}
+    });
+  }, 250);
 }
 $('#modeAntarBtn').addEventListener('click', function() { setAntarMode('antar'); });
 $('#modeJemputBtn').addEventListener('click', function() { setAntarMode('jemput'); });
@@ -2787,6 +2880,7 @@ async function fetchGPSJemput() {
       jv.textContent = t;
     }
     updateCompassUI();
+    renderLocMap('jemput', gpsJemputLat, gpsJemputLng, km);
     if (jemputFotoBase64) fillFotoMeta('jemput', gpsJemputLat, gpsJemputLng);
   } catch (e) {
     val.textContent = 'Gagal: ' + (e.message || 'GPS');
@@ -2794,20 +2888,24 @@ async function fetchGPSJemput() {
   }
 }
 $('#btnRefreshGpsJemput').addEventListener('click', fetchGPSJemput);
-$('#btnJemputCam').addEventListener('click', function() { $('#jemputFotoCam').click(); });
-$('#btnJemputUpload').addEventListener('click', function() { $('#jemputFoto').click(); });
-$('#jemputFotoArea').addEventListener('click', function(e) {
-  if (e.target.tagName === 'IMG' || e.target.closest('button')) return;
-  $('#jemputFoto').click();
+$('#btnJemputCam').addEventListener('click', function(e) {
+  e.preventDefault(); e.stopPropagation();
+  pickFoto($('#jemputFotoCam'));
+});
+$('#btnJemputUpload').addEventListener('click', function(e) {
+  e.preventDefault(); e.stopPropagation();
+  pickFoto($('#jemputFoto'));
 });
 async function onJemputFotoChange() {
   var file = this.files && this.files[0];
+  if (!file) return;
   await handleFotoFile(file, {
     setBase64: function(v) { jemputFotoBase64 = v; },
     areaId: 'jemputFotoArea', placeholderId: 'jemputFotoPlaceholder', previewId: 'jemputFotoPreview',
     inputId: 'jemputFoto', camId: 'jemputFotoCam', metaId: 'jemputFotoMeta',
     onReady: function() { fillFotoMeta('jemput', gpsJemputLat, gpsJemputLng); }
   });
+  try { this.value = ''; } catch (_) {}
 }
 $('#jemputFoto').addEventListener('change', onJemputFotoChange);
 $('#jemputFotoCam').addEventListener('change', onJemputFotoChange);
