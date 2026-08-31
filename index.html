@@ -162,9 +162,27 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
 .mode-tab svg{width:15px;height:15px}
 .antar-status-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:14px}
 @media(min-width:640px){.antar-status-grid{grid-template-columns:1fr 1fr}}
-.gps-box,.jarak-box{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center}
+.gps-box,.jarak-box,.compass-box{background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center}
 .gps-box .val,.jarak-box .val{font-size:17px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums}
 .gps-box .val.ok{color:var(--ok)}.gps-box .val.err{color:var(--bad)}.jarak-box .val{color:var(--primary)}
+.compass-box{display:flex;flex-direction:column;align-items:center;gap:6px}
+.compass-dial{position:relative;width:88px;height:88px;border-radius:50%;border:2px solid var(--border);
+  background:radial-gradient(circle at 50% 50%,var(--surface),var(--surface-2));box-shadow:inset 0 0 12px rgba(0,0,0,.06)}
+.compass-dial .cd-n{position:absolute;top:4px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:800;color:var(--bad)}
+.compass-dial .cd-e{position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:9px;font-weight:700;color:var(--muted)}
+.compass-dial .cd-s{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:700;color:var(--muted)}
+.compass-dial .cd-w{position:absolute;left:6px;top:50%;transform:translateY(-50%);font-size:9px;font-weight:700;color:var(--muted)}
+.compass-needle{position:absolute;left:50%;top:50%;width:4px;height:36px;margin-left:-2px;margin-top:-36px;
+  transform-origin:50% 100%;border-radius:2px 2px 0 0;background:linear-gradient(180deg,#ef4444 0%,#ef4444 55%,#94a3b8 55%,#94a3b8 100%);
+  transition:transform .12s linear;will-change:transform}
+.compass-needle::after{content:'';position:absolute;left:50%;bottom:-4px;width:8px;height:8px;margin-left:-4px;border-radius:50%;background:var(--text)}
+.compass-sppg{position:absolute;left:50%;top:50%;width:0;height:0;margin-left:-5px;margin-top:-34px;
+  border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:12px solid var(--primary);
+  transform-origin:50% 34px;transition:transform .12s linear;will-change:transform;opacity:.9}
+.compass-hdg{font-size:13px;font-weight:800;font-variant-numeric:tabular-nums}
+.compass-sub{font-size:11px;color:var(--muted);font-weight:600}
+.compass-box.inactive .compass-needle{opacity:.35}
+@media(min-width:640px){.antar-status-grid{grid-template-columns:1fr 1fr 1fr}}
 .foto-area{margin-top:14px;border:2px dashed var(--border);border-radius:13px;padding:20px;text-align:center;cursor:pointer;position:relative;min-height:120px;display:grid;place-items:center;transition:border-color .2s;touch-action:manipulation}
 .foto-area:hover{border-color:var(--primary)}
 .foto-area.has-img{padding:8px;border-style:solid}
@@ -534,6 +552,17 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
               <div class="val" id="antarJarakVal">—</div>
               <div style="font-size:11px;color:var(--muted);margin-top:6px" id="antarCoordDisplay"></div>
             </div>
+            <div class="compass-box inactive" id="antarCompassBox">
+              <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Kompas</div>
+              <div class="compass-dial" aria-hidden="true">
+                <span class="cd-n">U</span><span class="cd-e">T</span><span class="cd-s">S</span><span class="cd-w">B</span>
+                <div class="compass-sppg" id="antarCompassSppg" title="Arah ke SPPG"></div>
+                <div class="compass-needle" id="antarCompassNeedle"></div>
+              </div>
+              <div class="compass-hdg" id="antarCompassHdg">—°</div>
+              <div class="compass-sub" id="antarCompassSub">Aktifkan sensor</div>
+              <button type="button" class="btn btn-sm" id="btnEnableCompass" style="margin-top:4px"><span class="btn-label">Aktifkan Kompas</span></button>
+            </div>
           </div>
 
           <details class="sppg-config admin-only">
@@ -599,6 +628,16 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
             <div class="jarak-box">
               <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Jarak ke SPPG</div>
               <div class="val" id="jemputJarakVal">—</div>
+            </div>
+            <div class="compass-box inactive" id="jemputCompassBox">
+              <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Kompas</div>
+              <div class="compass-dial" aria-hidden="true">
+                <span class="cd-n">U</span><span class="cd-e">T</span><span class="cd-s">S</span><span class="cd-w">B</span>
+                <div class="compass-sppg" id="jemputCompassSppg" title="Arah ke SPPG"></div>
+                <div class="compass-needle" id="jemputCompassNeedle"></div>
+              </div>
+              <div class="compass-hdg" id="jemputCompassHdg">—°</div>
+              <div class="compass-sub" id="jemputCompassSub">Sama sensor dengan antar</div>
             </div>
           </div>
           <input type="hidden" id="jemputLat">
@@ -708,6 +747,7 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
       <div class="db-actions">
         <button class="btn btn-sm" id="btnDbGenerate" style="background:var(--grad)"><span data-ic="plus"></span><span class="btn-label">Generate Semua Sheet</span></button>
         <button class="btn btn-sm" id="btnDbRepair" style="background:var(--warn)"><span data-ic="refresh"></span><span class="btn-label">Repair Header</span></button>
+        <button class="btn btn-sm" id="btnRepairInstansi" style="background:#0ea5e9"><span data-ic="home"></span><span class="btn-label">Rapikan Kolom Instansi</span></button>
         <button class="btn btn-sm" id="btnDbCheck" style="background:var(--ok)"><span data-ic="check"></span><span class="btn-label">Cek Ulang Koneksi</span></button>
       </div>
 
@@ -886,7 +926,7 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
 
 <script>
 /* API_URL ganti dengan URL Web App kamu (akhiran /exec) */
-const API_URL = 'https://script.google.com/macros/s/AKfycbwvv149MaswbQwgR3gsCaGGeeepNNLSiyd_0eABnUcki4pasNzLlx_r9WZC-hPqkLIk/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxZefVpckkANyRTg6P9RB6xevlYF_pvzkvjCrilVUF7RYjnvUlIoriM5zkwve7pNg7G/exec';
 const IN_APPS = typeof google !== 'undefined' && !!google.script && !!google.script.run;
 
 /* ============ IKON SVG ============ */
@@ -1143,6 +1183,128 @@ function haversineKm(lat1, lon1, lat2, lon2) {
   const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
+/** Bearing true-north (0–360°) dari titik A ke B */
+function bearingDeg(lat1, lon1, lat2, lon2) {
+  var toRad = function(v) { return v * Math.PI / 180; };
+  var φ1 = toRad(lat1), φ2 = toRad(lat2);
+  var Δλ = toRad(lon2 - lon1);
+  var y = Math.sin(Δλ) * Math.cos(φ2);
+  var x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+  return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+}
+function cardinalFromDeg(d) {
+  var dirs = ['U', 'UT', 'T', 'ST', 'S', 'SB', 'B', 'UB'];
+  return dirs[Math.round(((d % 360) / 45)) % 8];
+}
+
+/* ============ KOMPAS (Device Orientation) ============ */
+var _compassHeading = null; /* derajat dari Utara, 0–360 */
+var _compassActive = false;
+var _compassListener = null;
+function normalizeHeading(alpha, webkitHdg, absolute) {
+  /* iOS: webkitCompassHeading = derajat dari Utara (0=U, 90=T) */
+  if (typeof webkitHdg === 'number' && !isNaN(webkitHdg)) return (webkitHdg + 360) % 360;
+  /* Android absolute: alpha sering 0 = Utara */
+  if (typeof alpha === 'number' && !isNaN(alpha)) {
+    /* Banyak perangkat: heading = 360 - alpha */
+    var h = (360 - alpha) % 360;
+    if (h < 0) h += 360;
+    return h;
+  }
+  return null;
+}
+function updateCompassUI() {
+  var h = _compassHeading;
+  var boxes = [
+    { needle: '#antarCompassNeedle', sppg: '#antarCompassSppg', hdg: '#antarCompassHdg', sub: '#antarCompassSub', box: '#antarCompassBox', lat: gpsLat, lng: gpsLng },
+    { needle: '#jemputCompassNeedle', sppg: '#jemputCompassSppg', hdg: '#jemputCompassHdg', sub: '#jemputCompassSub', box: '#jemputCompassBox', lat: gpsJemputLat, lng: gpsJemputLng }
+  ];
+  boxes.forEach(function(cfg) {
+    var needle = $(cfg.needle), sppgEl = $(cfg.sppg), hdgEl = $(cfg.hdg), subEl = $(cfg.sub), box = $(cfg.box);
+    if (!needle) return;
+    if (h == null) {
+      if (box) box.classList.add('inactive');
+      if (hdgEl) hdgEl.textContent = '—°';
+      return;
+    }
+    if (box) box.classList.remove('inactive');
+    /* Jarum merah mengarah ke Utara relatif layar: rotasi = -heading */
+    needle.style.transform = 'rotate(' + (-h) + 'deg)';
+    if (hdgEl) hdgEl.textContent = Math.round(h) + '° ' + cardinalFromDeg(h);
+    var lat = cfg.lat, lng = cfg.lng;
+    if (lat != null && lng != null && sppgEl) {
+      var sppg = getSPPG();
+      var brg = bearingDeg(lat, lng, sppg.lat, sppg.lng);
+      /* Segitiga biru: arah ke SPPG relatif perangkat */
+      sppgEl.style.transform = 'rotate(' + (brg - h) + 'deg)';
+      sppgEl.style.opacity = '0.95';
+      if (subEl) {
+        var rel = ((brg - h + 540) % 360) - 180; /* -180..180 */
+        var arah = Math.abs(rel) < 15 ? 'Lurus ke SPPG' :
+          (rel > 0 ? 'Belok kanan ' + Math.round(Math.abs(rel)) + '°' : 'Belok kiri ' + Math.round(Math.abs(rel)) + '°');
+        subEl.textContent = arah + ' · bearing ' + Math.round(brg) + '°';
+      }
+    } else if (subEl) {
+      if (sppgEl) sppgEl.style.opacity = '0.25';
+      subEl.textContent = 'Aktif · GPS untuk arah SPPG';
+    }
+  });
+}
+function onDeviceOrientation(e) {
+  var h = null;
+  if (e.webkitCompassHeading != null) h = normalizeHeading(null, e.webkitCompassHeading, true);
+  else if (e.absolute === true || e.absolute == null) h = normalizeHeading(e.alpha, null, e.absolute);
+  else h = normalizeHeading(e.alpha, null, false);
+  if (h == null) return;
+  /* Low-pass ringan agar jarum tidak goyang berlebihan */
+  if (_compassHeading == null) _compassHeading = h;
+  else {
+    var diff = ((h - _compassHeading + 540) % 360) - 180;
+    _compassHeading = (_compassHeading + diff * 0.35 + 360) % 360;
+  }
+  updateCompassUI();
+}
+async function enableCompass() {
+  try {
+    if (typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof DeviceOrientationEvent.requestPermission === 'function') {
+      var perm = await DeviceOrientationEvent.requestPermission();
+      if (perm !== 'granted') {
+        toast('Izin kompas ditolak', false);
+        return false;
+      }
+    }
+  } catch (e) {
+    toast('Kompas tidak tersedia: ' + (e.message || e), false);
+    return false;
+  }
+  if (_compassListener) {
+    window.removeEventListener('deviceorientation', _compassListener);
+    window.removeEventListener('deviceorientationabsolute', _compassListener);
+  }
+  _compassListener = onDeviceOrientation;
+  window.addEventListener('deviceorientationabsolute', _compassListener, true);
+  window.addEventListener('deviceorientation', _compassListener, true);
+  _compassActive = true;
+  var btn = $('#btnEnableCompass');
+  if (btn) btn.style.display = 'none';
+  var sub = $('#antarCompassSub');
+  if (sub) sub.textContent = 'Sensor aktif — putar perangkat';
+  toast('Kompas diaktifkan', true);
+  return true;
+}
+function startCompassIfPossible() {
+  /* Android sering tanpa permission prompt */
+  if (_compassActive) return;
+  if (typeof DeviceOrientationEvent !== 'undefined' &&
+      typeof DeviceOrientationEvent.requestPermission === 'function') {
+    /* iOS: butuh gesture user → tampilkan tombol */
+    var btn = $('#btnEnableCompass');
+    if (btn) btn.style.display = '';
+    return;
+  }
+  enableCompass().catch(function() {});
+}
 
 /* ============ SPPG COORDINATES (cache lokal + database Config) ============ */
 var _sppgCache = null;
@@ -1286,6 +1448,7 @@ async function fetchGPS() {
     el.textContent = gpsLat.toFixed(6) + ', ' + gpsLng.toFixed(6);
     el.className = 'val ok';
     updateJarak();
+    updateCompassUI();
     if (typeof antarFotoBase64 !== 'undefined' && antarFotoBase64) fillFotoMeta('antar', gpsLat, gpsLng);
   } catch (err) {
     el.textContent = 'Gagal: ' + (err.message || 'Izinkan akses GPS');
@@ -2239,7 +2402,7 @@ const TITLES = {
 const LOADERS = {
   dashboard: loadDashboard, driver: loadDrivers, instansi: loadInstansi,
   antar: () => Promise.all([loadInstansi()]).then(() => {
-    fetchGPS(); initSPPGFields();
+    fetchGPS(); initSPPGFields(); startCompassIfPossible();
     hydrate($('#tab-antar'));
     if ($('#cardModeJemput') && $('#cardModeJemput').style.display !== 'none') loadPendingJemput();
   }),
@@ -2539,6 +2702,8 @@ $('#antarFotoCam').addEventListener('change', onAntarFotoChange);
 
 /* Antar: GPS */
 $('#btnRefreshGps').addEventListener('click', function() { fetchGPS(); });
+var _btnComp = $('#btnEnableCompass');
+if (_btnComp) _btnComp.addEventListener('click', function() { enableCompass(); });
 $('#formAntar').addEventListener('submit', submitAntar);
 
 /* Mode switch Pengantaran / Pengambilan */
@@ -2621,6 +2786,7 @@ async function fetchGPSJemput() {
       if (gpsJemputAcc != null) t += ' · ' + fmtAcc(gpsJemputAcc);
       jv.textContent = t;
     }
+    updateCompassUI();
     if (jemputFotoBase64) fillFotoMeta('jemput', gpsJemputLat, gpsJemputLng);
   } catch (e) {
     val.textContent = 'Gagal: ' + (e.message || 'GPS');
@@ -2691,6 +2857,17 @@ $('#btnAbsExcel').addEventListener('click', downloadAbsensiExcel);
 $('#btnDbGenerate').addEventListener('click', dbGenerate);
 $('#btnDbRepair').addEventListener('click', dbRepair);
 $('#btnDbCheck').addEventListener('click', loadDatabase);
+$('#btnRepairInstansi').addEventListener('click', async function() {
+  if (!isAdminSess()) { toast('Hanya admin', false); return; }
+  if (!confirm('Rapikan urutan kolom Master_Instansi?\nBackup otomatis dibuat. Data dibaca by nama kolom.\nBaris yang isinya sudah tertukar perlu diedit/hapus manual.')) return;
+  var btn = this; btn.disabled = true; btn.classList.add('loading');
+  try {
+    var r = await apiCall('repair_instansi', { by: (sess() || {}).username || '' });
+    toast(r.message || 'Selesai', true);
+    await Promise.all([loadDatabase(), loadInstansi()]);
+  } catch (e) { toast(e.message, false); }
+  finally { btn.disabled = false; btn.classList.remove('loading'); }
+});
 $('#dbUserSearch').addEventListener('input', function() { loadUsersTable(); });
 $('#btnRevealAll').addEventListener('click', toggleRevealAll);
 $('#formUser').addEventListener('submit', e => {
