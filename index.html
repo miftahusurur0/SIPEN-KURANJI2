@@ -174,6 +174,18 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
 .foto-area .placeholder{color:var(--muted);font-size:13px;font-weight:600}
 .foto-area .placeholder svg{width:36px;height:36px;opacity:.4;margin-bottom:6px}
 .foto-size-label{font-size:11px;font-weight:600;color:var(--ok);margin-top:6px;text-align:center}
+.foto-meta{margin-top:8px;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;font-size:12px;display:none}
+.foto-meta.show{display:block}
+.foto-meta .fm-row{display:flex;justify-content:space-between;gap:8px;padding:3px 0;font-weight:600}
+.foto-meta .fm-row+.fm-row{border-top:1px solid var(--border);margin-top:2px;padding-top:5px}
+.foto-meta .fm-l{color:var(--muted);font-weight:600}
+.foto-meta .fm-v{color:var(--text);text-align:right;word-break:break-all}
+.foto-thumb{width:48px;height:48px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer;background:var(--surface-2)}
+.foto-cell{display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+.foto-cell a{font-size:11px;font-weight:700}
+.foto-lightbox{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.85);display:none;place-items:center;padding:16px;cursor:zoom-out}
+.foto-lightbox.show{display:grid}
+.foto-lightbox img{max-width:min(96vw,900px);max-height:90vh;border-radius:12px;box-shadow:0 20px 50px rgba(0,0,0,.5)}
 .foto-actions{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
 .foto-actions .btn-sm{flex:1;min-width:120px;justify-content:center;margin:0}
 .antar-info-box{margin-top:10px;padding:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:11px}
@@ -504,6 +516,11 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
               <button type="button" class="btn btn-sm" id="btnAntarCam" style="background:var(--grad)"><span data-ic="camera"></span><span class="btn-label">Kamera</span></button>
               <button type="button" class="btn btn-sm" id="btnAntarUpload" style="background:#0ea5e9"><span data-ic="download"></span><span class="btn-label">Upload</span></button>
             </div>
+            <div class="foto-meta" id="antarFotoMeta">
+              <div class="fm-row"><span class="fm-l">Waktu foto</span><span class="fm-v" id="antarFotoWaktu">—</span></div>
+              <div class="fm-row"><span class="fm-l">Lokasi upload</span><span class="fm-v" id="antarFotoLokasi">—</span></div>
+              <div class="fm-row"><span class="fm-l">Jarak ke SPPG</span><span class="fm-v" id="antarFotoJarak">—</span></div>
+            </div>
           </div>
 
           <div class="antar-status-grid">
@@ -567,6 +584,11 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
               <button type="button" class="btn btn-sm" id="btnJemputCam" style="background:var(--grad)"><span data-ic="camera"></span><span class="btn-label">Kamera</span></button>
               <button type="button" class="btn btn-sm" id="btnJemputUpload" style="background:#0ea5e9"><span data-ic="download"></span><span class="btn-label">Upload</span></button>
             </div>
+            <div class="foto-meta" id="jemputFotoMeta">
+              <div class="fm-row"><span class="fm-l">Waktu foto</span><span class="fm-v" id="jemputFotoWaktu">—</span></div>
+              <div class="fm-row"><span class="fm-l">Lokasi upload</span><span class="fm-v" id="jemputFotoLokasi">—</span></div>
+              <div class="fm-row"><span class="fm-l">Jarak ke SPPG</span><span class="fm-v" id="jemputFotoJarak">—</span></div>
+            </div>
           </div>
           <div class="antar-status-grid">
             <div class="gps-box">
@@ -575,8 +597,8 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
               <button type="button" class="btn btn-sm" id="btnRefreshGpsJemput" style="margin-top:8px"><span data-ic="refresh"></span><span class="btn-label">Refresh GPS</span></button>
             </div>
             <div class="jarak-box">
-              <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Status</div>
-              <div class="val" style="font-size:14px;color:var(--warn)">Menunggu pengambilan</div>
+              <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Jarak ke SPPG</div>
+              <div class="val" id="jemputJarakVal">—</div>
             </div>
           </div>
           <input type="hidden" id="jemputLat">
@@ -662,7 +684,7 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
       <div class="card">
         <div class="card-head"><div class="ch-ic"><span data-ic="pin"></span></div><div><h2>Data Distribusi Lapangan</h2><small>GPS, foto &amp; jarak dari aplikasi driver</small></div></div>
         <div class="tablewrap"><table>
-          <thead><tr><th>#</th><th>Tanggal</th><th>Sesi</th><th>Driver</th><th>Instansi</th><th>PK/PB</th><th>Status</th><th>Jarak</th><th>Foto Antar</th><th>Foto Jemput</th><th>Waktu Jemput</th></tr></thead>
+          <thead><tr><th>#</th><th>Tanggal</th><th>Sesi</th><th>Driver</th><th>Instansi</th><th>PK/PB</th><th>Status</th><th>Waktu Antar</th><th>Lokasi / Jarak SPPG</th><th>Foto Antar</th><th>Foto Jemput</th><th>Waktu Jemput</th></tr></thead>
           <tbody id="tabelDistribusi"></tbody>
         </table></div>
       </div>
@@ -864,7 +886,7 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
 
 <script>
 /* API_URL ganti dengan URL Web App kamu (akhiran /exec) */
-const API_URL = 'https://script.google.com/macros/s/AKfycbyvDysVffnafFeAIrHIV8GDOITxJGC8_txN_yjh43s-Mwn70keciAHohLVLLtbp2xiZ/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbwvv149MaswbQwgR3gsCaGGeeepNNLSiyd_0eABnUcki4pasNzLlx_r9WZC-hPqkLIk/exec';
 const IN_APPS = typeof google !== 'undefined' && !!google.script && !!google.script.run;
 
 /* ============ IKON SVG ============ */
@@ -1148,43 +1170,142 @@ async function loadSPPGFromDB() {
   return getSPPG();
 }
 
-/* ============ GPS ============ */
-let gpsLat = null, gpsLng = null;
-function fetchGPS() {
+/* ============ GPS (akurasi tinggi) ============ */
+let gpsLat = null, gpsLng = null, gpsAcc = null;
+let gpsJemputLat = null, gpsJemputLng = null, gpsJemputAcc = null;
+var _gpsWatchId = null;
+var _gpsWatchIdJ = null;
+
+/** Ambil posisi terbaik: watchPosition + sample beberapa detik, pilih accuracy terendah */
+function getAccuratePosition(opts) {
+  opts = opts || {};
+  var targetAcc = opts.targetAcc || 25; /* meter — stop lebih awal jika sudah bagus */
+  var maxWait = opts.maxWait || 18000;
+  var minSamples = opts.minSamples || 2;
+  return new Promise(function(resolve, reject) {
+    if (!navigator.geolocation) {
+      reject(new Error('GPS tidak didukung di perangkat ini'));
+      return;
+    }
+    var best = null;
+    var samples = 0;
+    var done = false;
+    var watchId = null;
+    var timer = null;
+    function finish(ok) {
+      if (done) return;
+      done = true;
+      if (watchId != null) {
+        try { navigator.geolocation.clearWatch(watchId); } catch (_) {}
+      }
+      if (timer) clearTimeout(timer);
+      if (ok && best) resolve(best);
+      else reject(new Error(ok ? 'Tidak ada data GPS' : (opts._lastErr || 'Gagal mendapatkan GPS')));
+    }
+    function onPos(pos) {
+      samples++;
+      var c = pos.coords;
+      var acc = (typeof c.accuracy === 'number' && isFinite(c.accuracy)) ? c.accuracy : 9999;
+      if (!best || acc < best.accuracy) {
+        best = {
+          lat: c.latitude,
+          lng: c.longitude,
+          accuracy: acc,
+          altitude: c.altitude,
+          speed: c.speed,
+          heading: c.heading,
+          ts: pos.timestamp || Date.now()
+        };
+      }
+      if (typeof opts.onProgress === 'function') opts.onProgress(best, samples);
+      /* Cukup akurat & cukup sampel → selesai */
+      if (best.accuracy <= targetAcc && samples >= minSamples) finish(true);
+    }
+    function onErr(err) {
+      opts._lastErr = (err && err.message) ? err.message : 'Izinkan akses lokasi';
+      /* Jika sudah ada sample, pakai yang terbaik */
+      if (best && samples >= 1) finish(true);
+    }
+    try {
+      watchId = navigator.geolocation.watchPosition(onPos, onErr, {
+        enableHighAccuracy: true,
+        maximumAge: 0,
+        timeout: maxWait
+      });
+    } catch (e) {
+      reject(e);
+      return;
+    }
+    /* Fallback getCurrentPosition paralel (beberapa browser lebih cepat) */
+    try {
+      navigator.geolocation.getCurrentPosition(onPos, function() {}, {
+        enableHighAccuracy: true,
+        maximumAge: 0,
+        timeout: Math.min(12000, maxWait)
+      });
+    } catch (_) {}
+    timer = setTimeout(function() {
+      if (best) finish(true);
+      else finish(false);
+    }, maxWait);
+  });
+}
+function fmtAcc(m) {
+  if (m == null || !isFinite(m)) return '';
+  if (m < 1000) return '±' + Math.round(m) + ' m';
+  return '±' + (m / 1000).toFixed(1) + ' km';
+}
+function accLabel(m) {
+  if (m == null || !isFinite(m)) return '';
+  if (m <= 15) return 'Sangat baik';
+  if (m <= 30) return 'Baik';
+  if (m <= 50) return 'Cukup';
+  if (m <= 100) return 'Kurang';
+  return 'Lemah — tunggu / ke area terbuka';
+}
+async function fetchGPS() {
   const el = $('#antarGpsVal');
   if (!el) return;
-  el.textContent = 'Mengambil...';
+  el.textContent = 'Mengunci GPS…';
   el.className = 'val';
-  if (!navigator.geolocation) {
-    el.textContent = 'GPS tidak didukung';
+  try {
+    var pos = await getAccuratePosition({
+      targetAcc: 20,
+      maxWait: 20000,
+      minSamples: 2,
+      onProgress: function(best) {
+        el.textContent = 'Mengunci… ' + fmtAcc(best.accuracy);
+        el.className = 'val';
+      }
+    });
+    gpsLat = pos.lat;
+    gpsLng = pos.lng;
+    gpsAcc = pos.accuracy;
+    $('#antarLat').value = gpsLat;
+    $('#antarLng').value = gpsLng;
+    el.textContent = gpsLat.toFixed(6) + ', ' + gpsLng.toFixed(6);
+    el.className = 'val ok';
+    updateJarak();
+    if (typeof antarFotoBase64 !== 'undefined' && antarFotoBase64) fillFotoMeta('antar', gpsLat, gpsLng);
+  } catch (err) {
+    el.textContent = 'Gagal: ' + (err.message || 'Izinkan akses GPS');
     el.className = 'val err';
-    return;
   }
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      gpsLat = pos.coords.latitude;
-      gpsLng = pos.coords.longitude;
-      $('#antarLat').value = gpsLat;
-      $('#antarLng').value = gpsLng;
-      el.textContent = gpsLat.toFixed(6) + ', ' + gpsLng.toFixed(6);
-      el.className = 'val ok';
-      updateJarak();
-    },
-    err => {
-      el.textContent = 'Gagal: ' + (err.message || 'Izinkan akses GPS');
-      el.className = 'val err';
-    },
-    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-  );
 }
 function updateJarak() {
   const el = $('#antarJarakVal');
   const coordEl = $('#antarCoordDisplay');
+  if (!el) return;
   if (gpsLat == null || gpsLng == null) { el.textContent = '\u2014'; return; }
   const sppg = getSPPG();
   const km = haversineKm(sppg.lat, sppg.lng, gpsLat, gpsLng);
-  el.textContent = km.toFixed(1) + ' km';
-  if (coordEl) coordEl.textContent = 'SPPG: ' + sppg.lat + ', ' + sppg.lng;
+  var txt = km < 1 ? (km * 1000).toFixed(0) + ' m' : km.toFixed(2) + ' km';
+  if (gpsAcc != null) txt += ' · ' + fmtAcc(gpsAcc);
+  el.textContent = txt;
+  if (coordEl) {
+    coordEl.textContent = 'SPPG: ' + Number(sppg.lat).toFixed(5) + ', ' + Number(sppg.lng).toFixed(5) +
+      (gpsAcc != null ? ' · Akurasi: ' + accLabel(gpsAcc) : '');
+  }
 }
 
 /* ============ COMPRESS IMAGE (mobile-optimized) ============ */
@@ -1402,19 +1523,84 @@ async function loadTugas() {
     : emptyRow(isAdminSess() ? 10 : 9, 'Belum ada tugas antaran');
   hydrate($('#tabelTugas'));
 }
+function fotoCell(url, label) {
+  if (!url) return '—';
+  return '<div class="foto-cell">' +
+    '<img class="foto-thumb" src="' + esc(url) + '" alt="' + esc(label) + '" loading="lazy" onclick="openFotoLightbox(\'' + esc(url) + '\')">' +
+    '<a class="link" href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(label) + '</a></div>';
+}
+function lokasiCell(r) {
+  var loc = '';
+  if (r.lat_antar != null && r.lng_antar != null && !isNaN(r.lat_antar)) {
+    loc = Number(r.lat_antar).toFixed(5) + ', ' + Number(r.lng_antar).toFixed(5);
+  }
+  var html = '<div style="font-size:11px;line-height:1.45">';
+  if (loc) html += '<div class="cell-main">' + esc(loc) + '</div>';
+  if (r.alamat) html += '<div class="cell-sub" style="white-space:normal;max-width:160px">' + esc(r.alamat) + '</div>';
+  html += '<div style="font-weight:700;color:var(--primary);margin-top:2px">' + esc(r.jarak || '—') + '</div>';
+  if (r.jarak_jemput) html += '<div class="cell-sub">Jemput: ' + esc(r.jarak_jemput) + '</div>';
+  html += '</div>';
+  return html;
+}
+function openFotoLightbox(url) {
+  var box = $('#fotoLightbox');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'fotoLightbox';
+    box.className = 'foto-lightbox';
+    box.innerHTML = '<img alt="Preview foto">';
+    box.addEventListener('click', function() { box.classList.remove('show'); });
+    document.body.appendChild(box);
+  }
+  box.querySelector('img').src = url;
+  box.classList.add('show');
+}
+function fmtNowLocal() {
+  try {
+    return new Date().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'medium' });
+  } catch (e) {
+    return new Date().toISOString();
+  }
+}
+function fillFotoMeta(prefix, lat, lng) {
+  var meta = $('#' + prefix + 'FotoMeta');
+  var wEl = $('#' + prefix + 'FotoWaktu');
+  var lEl = $('#' + prefix + 'FotoLokasi');
+  var jEl = $('#' + prefix + 'FotoJarak');
+  if (!meta) return;
+  if (wEl) wEl.textContent = fmtNowLocal();
+  var acc = prefix === 'jemput' ? gpsJemputAcc : gpsAcc;
+  if (lat != null && lng != null && !isNaN(lat) && !isNaN(lng)) {
+    if (lEl) lEl.textContent = Number(lat).toFixed(6) + ', ' + Number(lng).toFixed(6) +
+      (acc != null ? ' (' + fmtAcc(acc) + ')' : '');
+    var sppg = getSPPG();
+    var km = haversineKm(sppg.lat, sppg.lng, lat, lng);
+    if (jEl) {
+      var t = km < 1 ? (km * 1000).toFixed(0) + ' m' : km.toFixed(2) + ' km';
+      if (acc != null) t += ' · ' + accLabel(acc);
+      jEl.textContent = t;
+    }
+  } else {
+    if (lEl) lEl.textContent = 'GPS belum aktif — tekan Refresh GPS';
+    if (jEl) jEl.textContent = '—';
+  }
+  meta.classList.add('show');
+}
 async function loadDistribusi() {
-  $('#tabelDistribusi').innerHTML = skelRows(3, 11);
+  $('#tabelDistribusi').innerHTML = skelRows(3, 12);
   const { data } = await apiCall('distribusi');
   state.distribusi = data;
   $('#tabelDistribusi').innerHTML = data.length ? data.map((r,i) => `
     <tr><td>${i+1}</td><td>${esc(r.tanggal)}</td><td>${esc(r.sesi || '—')}</td>
     <td><div class="cell-main">${esc(r.driver)}</div></td>
     <td>${esc(r.instansi)}</td><td><b>${r.pk}</b>/<b>${r.pb}</b></td>
-    <td>${statBadge(r.status)}</td><td>${esc(r.jarak || '—')}</td>
-    <td>${r.foto ? `<a class="link" href="${esc(r.foto)}" target="_blank" rel="noopener">Antar</a>` : '—'}</td>
-    <td>${r.foto_jemput ? `<a class="link" href="${esc(r.foto_jemput)}" target="_blank" rel="noopener">Jemput</a>` : (r.sudah_jemput ? '✓' : '—')}</td>
+    <td>${statBadge(r.status)}</td>
+    <td style="font-size:11px;white-space:nowrap">${esc(r.waktu_antar || '—')}</td>
+    <td>${lokasiCell(r)}</td>
+    <td>${fotoCell(r.foto, 'Antar')}</td>
+    <td>${fotoCell(r.foto_jemput, r.foto_jemput ? 'Jemput' : '')}</td>
     <td style="font-size:11px">${esc(r.waktu_jemput || '—')}</td></tr>`).join('')
-    : emptyRow(11, 'Belum ada data distribusi lapangan');
+    : emptyRow(12, 'Belum ada data distribusi lapangan');
 }
 async function loadRegistrasi() {
   $('#tabelRegistrasi').innerHTML = skelRows(3, 7);
@@ -1613,7 +1799,7 @@ async function submitAntar(e) {
     resetFotoUI({
       setBase64: function(v) { antarFotoBase64 = v; },
       areaId: 'antarFotoArea', placeholderId: 'antarFotoPlaceholder', previewId: 'antarFotoPreview',
-      inputId: 'antarFoto', camId: 'antarFotoCam'
+      inputId: 'antarFoto', camId: 'antarFotoCam', metaId: 'antarFotoMeta'
     });
     $('#antarGpsVal').textContent = 'Mengambil...';
     $('#antarGpsVal').className = 'val';
@@ -2296,7 +2482,9 @@ async function handleFotoFile(file, opts) {
       sizeEl.className = 'foto-size-label';
       area.parentNode.insertBefore(sizeEl, area.nextSibling);
     }
-    sizeEl.textContent = 'Siap kirim · ' + fotoSizeLabel(b64);
+    sizeEl.textContent = 'Preview siap · ' + fotoSizeLabel(b64);
+    /* Meta: waktu, lokasi, jarak SPPG */
+    if (typeof opts.onReady === 'function') opts.onReady(b64);
     toast('Foto siap (' + fotoSizeLabel(b64) + ')', true);
   } catch (e) {
     area.classList.remove('is-processing');
@@ -2314,6 +2502,10 @@ function resetFotoUI(opts) {
   if (prev) prev.remove();
   var sizeEl = document.getElementById(opts.previewId + 'Size');
   if (sizeEl) sizeEl.remove();
+  if (opts.metaId) {
+    var meta = $(opts.metaId);
+    if (meta) meta.classList.remove('show');
+  }
   var ph = $(opts.placeholderId);
   if (ph) {
     ph.style.display = '';
@@ -2338,7 +2530,8 @@ async function onAntarFotoChange() {
   await handleFotoFile(file, {
     setBase64: function(v) { antarFotoBase64 = v; },
     areaId: 'antarFotoArea', placeholderId: 'antarFotoPlaceholder', previewId: 'antarFotoPreview',
-    inputId: 'antarFoto', camId: 'antarFotoCam'
+    inputId: 'antarFoto', camId: 'antarFotoCam', metaId: 'antarFotoMeta',
+    onReady: function() { fillFotoMeta('antar', gpsLat, gpsLng); }
   });
 }
 $('#antarFoto').addEventListener('change', onAntarFotoChange);
@@ -2367,7 +2560,6 @@ $('#modeJemputBtn').addEventListener('click', function() { setAntarMode('jemput'
 
 /* Pengambilan: load list pending */
 let jemputFotoBase64 = '';
-let gpsJemputLat = null, gpsJemputLng = null;
 async function loadPendingJemput() {
   var sel = $('#selJemputDistribusi');
   sel.innerHTML = '<option value="">Memuat...</option>';
@@ -2400,20 +2592,40 @@ $('#selJemputDistribusi').addEventListener('change', function() {
     box.style.display = 'none';
   }
 });
-function fetchGPSJemput() {
+async function fetchGPSJemput() {
   var val = $('#jemputGpsVal');
+  if (!val) return;
   if (!navigator.geolocation) { val.textContent = 'Tidak didukung'; val.className = 'val err'; return; }
-  val.textContent = 'Mengambil...'; val.className = 'val';
-  navigator.geolocation.getCurrentPosition(function(pos) {
-    gpsJemputLat = pos.coords.latitude;
-    gpsJemputLng = pos.coords.longitude;
+  val.textContent = 'Mengunci GPS…'; val.className = 'val';
+  try {
+    var pos = await getAccuratePosition({
+      targetAcc: 20,
+      maxWait: 20000,
+      minSamples: 2,
+      onProgress: function(best) {
+        val.textContent = 'Mengunci… ' + fmtAcc(best.accuracy);
+      }
+    });
+    gpsJemputLat = pos.lat;
+    gpsJemputLng = pos.lng;
+    gpsJemputAcc = pos.accuracy;
     $('#jemputLat').value = gpsJemputLat;
     $('#jemputLng').value = gpsJemputLng;
-    val.textContent = gpsJemputLat.toFixed(5) + ', ' + gpsJemputLng.toFixed(5);
+    val.textContent = gpsJemputLat.toFixed(6) + ', ' + gpsJemputLng.toFixed(6);
     val.className = 'val ok';
-  }, function() {
-    val.textContent = 'Gagal GPS'; val.className = 'val err';
-  }, { enableHighAccuracy: true, timeout: 12000 });
+    var sppg = getSPPG();
+    var km = haversineKm(sppg.lat, sppg.lng, gpsJemputLat, gpsJemputLng);
+    var jv = $('#jemputJarakVal');
+    if (jv) {
+      var t = km < 1 ? (km * 1000).toFixed(0) + ' m' : km.toFixed(2) + ' km';
+      if (gpsJemputAcc != null) t += ' · ' + fmtAcc(gpsJemputAcc);
+      jv.textContent = t;
+    }
+    if (jemputFotoBase64) fillFotoMeta('jemput', gpsJemputLat, gpsJemputLng);
+  } catch (e) {
+    val.textContent = 'Gagal: ' + (e.message || 'GPS');
+    val.className = 'val err';
+  }
 }
 $('#btnRefreshGpsJemput').addEventListener('click', fetchGPSJemput);
 $('#btnJemputCam').addEventListener('click', function() { $('#jemputFotoCam').click(); });
@@ -2427,7 +2639,8 @@ async function onJemputFotoChange() {
   await handleFotoFile(file, {
     setBase64: function(v) { jemputFotoBase64 = v; },
     areaId: 'jemputFotoArea', placeholderId: 'jemputFotoPlaceholder', previewId: 'jemputFotoPreview',
-    inputId: 'jemputFoto', camId: 'jemputFotoCam'
+    inputId: 'jemputFoto', camId: 'jemputFotoCam', metaId: 'jemputFotoMeta',
+    onReady: function() { fillFotoMeta('jemput', gpsJemputLat, gpsJemputLng); }
   });
 }
 $('#jemputFoto').addEventListener('change', onJemputFotoChange);
@@ -2455,9 +2668,10 @@ $('#formJemput').addEventListener('submit', async function(e) {
     resetFotoUI({
       setBase64: function(v) { jemputFotoBase64 = v; },
       areaId: 'jemputFotoArea', placeholderId: 'jemputFotoPlaceholder', previewId: 'jemputFotoPreview',
-      inputId: 'jemputFoto', camId: 'jemputFotoCam'
+      inputId: 'jemputFoto', camId: 'jemputFotoCam', metaId: 'jemputFotoMeta'
     });
     $('#jemputCatatan').value = '';
+    var jv = $('#jemputJarakVal'); if (jv) jv.textContent = '—';
     await Promise.all([loadPendingJemput(), loadDistribusi(), loadDashboard()]);
   } catch (err) { toast(err.message, false); }
   finally { btn.disabled = false; btn.classList.remove('loading'); }
