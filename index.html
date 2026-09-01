@@ -43,6 +43,7 @@ body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--bg);c
 .login-pw-wrap{position:relative}
 .login-pw-wrap input{padding-right:42px}
 .login-pw-wrap .pw-toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;display:grid;place-items:center}
+.login-pw-wrap .pw-toggle svg{width:18px;height:18px;flex:none}
 
 /* Topbar */
 .topbar{position:sticky;top:0;z-index:40;border-bottom:1px solid var(--border);
@@ -186,8 +187,12 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
 @media(min-width:640px){.antar-status-grid{grid-template-columns:1fr 1fr 1fr}}
 .foto-area{margin-top:14px;border:2px dashed var(--border);border-radius:13px;padding:20px;text-align:center;position:relative;min-height:120px;display:grid;place-items:center;transition:border-color .2s;touch-action:manipulation;cursor:default}
 .foto-area.has-img{padding:8px;border-style:solid}
-.foto-area.is-processing{opacity:.75;pointer-events:none;border-color:var(--primary)}
-.foto-area.is-processing .placeholder svg{animation:spin .8s linear infinite}
+.foto-area.is-processing{opacity:1;pointer-events:none;border-color:var(--primary);position:relative}
+.foto-area.is-processing::after{content:'';position:absolute;inset:0;background:rgba(15,23,42,.45);border-radius:11px;z-index:2}
+.foto-area .foto-loading{display:none;position:absolute;inset:0;z-index:3;place-items:center;flex-direction:column;gap:8px;color:#fff;font-size:13px;font-weight:700;text-align:center;padding:12px}
+.foto-area.is-processing .foto-loading{display:grid}
+.foto-area .foto-loading .spinner{width:36px;height:36px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto}
+.foto-area.is-processing .placeholder{display:none!important}
 .foto-area img{max-width:100%;max-height:220px;border-radius:10px;object-fit:contain;display:block;margin:0 auto}
 .foto-area .placeholder{color:var(--muted);font-size:13px;font-weight:600;pointer-events:none}
 .foto-area .placeholder svg{width:36px;height:36px;opacity:.4;margin-bottom:6px}
@@ -206,7 +211,7 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
 .foto-meta .fm-row+.fm-row{border-top:1px solid var(--border);margin-top:2px;padding-top:5px}
 .foto-meta .fm-l{color:var(--muted);font-weight:600}
 .foto-meta .fm-v{color:var(--text);text-align:right;word-break:break-all}
-.foto-thumb{width:48px;height:48px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer;background:var(--surface-2)}
+.foto-thumb{width:48px;height:48px;object-fit:cover;border-radius:8px;border:1px solid var(--border);cursor:pointer;background:var(--surface-2);transition:opacity .2s}
 .foto-cell{display:flex;flex-direction:column;gap:4px;align-items:flex-start}
 .foto-cell a{font-size:11px;font-weight:700}
 .foto-lightbox{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.85);display:none;place-items:center;padding:16px;cursor:zoom-out}
@@ -300,6 +305,7 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
 .riwayat-item .ri-pkpb{margin-top:2px;font-weight:700}
 .riwayat-item .ri-ket{color:var(--muted);font-size:12px;margin-top:2px}
 .edit-pk-btn{background:none;border:1px solid var(--primary);border-radius:8px;padding:4px 10px;font:inherit;font-size:11px;font-weight:700;color:var(--primary);cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.edit-pk-btn svg{width:13px;height:13px;flex:none}
 .edit-pk-btn:hover{background:var(--primary);color:#fff}
 .btn-act{background:none;border:1px solid var(--border);border-radius:8px;padding:4px 8px;font:inherit;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;gap:3px;margin:1px}
 .btn-act svg{width:12px;height:12px}
@@ -309,6 +315,7 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
 .btn-act.del:hover{background:var(--bad);color:#fff}
 .act-cell{white-space:nowrap}
 .pw-reveal-btn,.pw-reset-btn{background:none;border:1px solid var(--border);border-radius:8px;padding:4px 10px;font:inherit;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;gap:4px}
+.pw-reveal-btn svg,.pw-reset-btn svg{width:13px;height:13px;flex:none}
 .pw-reset-btn{color:var(--warn)}
 .pw-cell{display:flex;align-items:center;gap:6px}
 .pw-hash{font-family:monospace;font-size:11px;color:var(--muted);word-break:break-all;max-width:160px;overflow:hidden;text-overflow:ellipsis}
@@ -383,7 +390,7 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
     <div class="md-item active" data-tab="dashboard"><span data-ic="chart"></span> Dashboard</div>
     <div class="md-item admin-only" data-tab="driver"><span data-ic="users"></span> Data Driver</div>
     <div class="md-item admin-only" data-tab="instansi"><span data-ic="home"></span> Master Instansi</div>
-    <div class="md-item admin-only" data-tab="tugas"><span data-ic="package"></span> Tugas Antaran</div>
+    <div class="md-item" data-tab="tugas"><span data-ic="package"></span> Tugas Antaran</div>
     <div class="md-item" data-tab="antar"><span data-ic="camera"></span> Antar Distribusi</div>
     <div class="md-section">Laporan &amp; Data</div>
     <div class="md-item admin-only" data-tab="laporan"><span data-ic="clipboard"></span> Laporan Instansi</div>
@@ -584,15 +591,22 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
           </div>
 
           <details class="sppg-config admin-only">
-            <summary>Pengaturan Koordinat SPPG (Admin)</summary>
-            <p style="font-size:12px;color:var(--muted);margin:8px 0 10px">Lokasi gudang/titik awal. Disimpan ke sheet <b>Config</b> di database.</p>
+            <summary>Pengaturan SPPG & Google Maps (Admin)</summary>
+            <p style="font-size:12px;color:var(--muted);margin:8px 0 10px">Lokasi gudang + API Key Maps. Disimpan di sheet <b>Config</b>.</p>
             <div class="grid">
               <div><label>SPPG Latitude</label><input type="text" id="sppgLat" placeholder="-6.200000" inputmode="decimal"></div>
               <div><label>SPPG Longitude</label><input type="text" id="sppgLng" placeholder="106.816667" inputmode="decimal"></div>
             </div>
+            <div style="margin-top:10px">
+              <label>Google Maps API Key</label>
+              <input type="text" id="gmapsApiKey" placeholder="AIza..." autocomplete="off" spellcheck="false">
+              <p style="font-size:11px;color:var(--muted);margin:6px 0 0">Aktifkan <b>Maps JavaScript API</b> di Google Cloud. Kosongkan = pakai OpenStreetMap.</p>
+            </div>
             <div style="display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap">
-              <button type="button" class="btn btn-sm" id="btnSaveSppg"><span data-ic="save"></span><span class="btn-label">Simpan ke Database</span></button>
+              <button type="button" class="btn btn-sm" id="btnSaveSppg"><span data-ic="save"></span><span class="btn-label">Simpan SPPG</span></button>
+              <button type="button" class="btn btn-sm" id="btnSaveMapsKey" style="background:#0ea5e9"><span data-ic="map"></span><span class="btn-label">Simpan API Key</span></button>
               <span id="sppgSourceHint" style="font-size:11px;font-weight:600;color:var(--muted)"></span>
+              <span id="mapsKeyHint" style="font-size:11px;font-weight:600;color:var(--muted)"></span>
             </div>
           </details>
 
@@ -676,24 +690,25 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
       </div>
     </section>
 
-    <!-- TUGAS ANTARAN (admin) -->
+    <!-- TUGAS ANTARAN (admin buat, driver lihat tugasnya) -->
     <section class="tab" id="tab-tugas">
       <div class="card admin-only">
-        <div class="card-head"><div class="ch-ic"><span data-ic="package"></span></div><div><h2>Buat Tugas Antaran</h2><small>Otomatis masuk Absensi Instansi (Total = PK + PB)</small></div></div>
+        <div class="card-head"><div class="ch-ic"><span data-ic="package"></span></div><div><h2>Buat Tugas Antaran</h2><small>Tugas masuk ke daftar driver yang dipilih</small></div></div>
         <form id="formTugas" autocomplete="off">
           <div class="grid">
             <div><label>Driver *</label><select name="id_driver" id="selTugasDriver" required></select></div>
             <div><label>Instansi *</label><select name="id_instansi" id="selTugasInstansi" required></select></div>
             <div><label>PK</label><input name="pk" id="inPk" type="number" min="0" value="0"></div>
             <div><label>PB</label><input name="pb" id="inPb" type="number" min="0" value="0"></div>
-            <div><label>Status</label><select name="status"><option>Sukses</option><option>Pending</option><option>Gagal</option></select></div>
+            <div><label>Status</label><select name="status"><option value="Pending" selected>Pending</option><option value="Sukses">Sukses</option><option value="Gagal">Gagal</option></select></div>
             <div><label>Catatan</label><input name="catatan" placeholder="opsional"></div>
           </div>
           <button class="btn" type="submit"><span data-ic="send"></span><span class="btn-label">Simpan Tugas</span></button>
         </form>
       </div>
       <div class="card">
-        <div class="card-head"><div class="ch-ic"><span data-ic="clock"></span></div><div><h2>Riwayat Tugas Antaran</h2></div></div>
+        <div class="card-head"><div class="ch-ic"><span data-ic="clock"></span></div>
+          <div><h2 id="tugasListTitle">Tugas Antaran</h2><small id="tugasListSub">Daftar tugas pengiriman</small></div></div>
         <div class="tablewrap"><table>
           <thead><tr><th>#</th><th>Tanggal</th><th>Driver</th><th>Instansi</th><th>PK</th><th>PB</th><th>Total</th><th>Status</th><th>Waktu Antar</th><th class="admin-only">Aksi</th></tr></thead>
           <tbody id="tabelTugas"></tbody>
@@ -780,7 +795,7 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
 
       <!-- Users Table -->
       <div class="card">
-        <div class="card-head"><div class="ch-ic"><span data-ic="shield"></span></div><div><h2>Database Users</h2><small>Username | Password | Salt | Role | NamaLengkap | ID_Driver | CreatedAt | UpdatedAt</small></div></div>
+        <div class="card-head"><div class="ch-ic"><span data-ic="shield"></span></div><div><h2>Database Users</h2><small>Password ditampilkan asli (bukan hash) — akun lama perlu direset sekali agar bisa tampil</small></div></div>
         <input type="text" class="db-user-search" id="dbUserSearch" placeholder="Cari username, nama, atau role...">
         <div class="tablewrap"><table>
           <thead><tr><th>#</th><th>Username</th><th>Password <button type="button" class="pw-reveal-btn" id="btnRevealAll" title="Tampilkan/sembunyikan semua password"><span data-ic="eye"></span> Lihat</button></th><th>Salt</th><th>Role</th><th>Nama Lengkap</th><th>ID Driver</th><th>CreatedAt</th><th>Aksi</th></tr></thead>
@@ -954,7 +969,7 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
 /* API_URL ganti dengan URL Web App kamu (akhiran /exec) */
-const API_URL = 'https://script.google.com/macros/s/AKfycbznbphx2Huxfzy0ecTCP_9-r2_KrEzV8BkIbqN-r9hIT3jx6sfp7Pt_kZizyIGtlpMQ/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbwK606mpnONn68cTolQwo45laiTKu9JyEHMGxAwR45yc7til_gETzZ7VAksubRP_Xcz/exec';
 const IN_APPS = typeof google !== 'undefined' && !!google.script && !!google.script.run;
 
 /* ============ IKON SVG ============ */
@@ -1477,7 +1492,7 @@ async function fetchGPS() {
     el.className = 'val ok';
     updateJarak();
     updateCompassUI();
-    if (typeof antarFotoBase64 !== 'undefined' && antarFotoBase64) fillFotoMeta('antar', gpsLat, gpsLng);
+    if (fotoState.antar.b64) fillFotoMeta('antar', gpsLat, gpsLng);
   } catch (err) {
     el.textContent = 'Gagal: ' + (err.message || 'Izinkan akses GPS');
     el.className = 'val err';
@@ -1500,34 +1515,127 @@ function updateJarak() {
   renderLocMap('antar', gpsLat, gpsLng, km);
 }
 
-/* ============ MAPS (Leaflet + OSM) ============ */
+/* ============ MAPS (Google Maps API + fallback Leaflet/OSM) ============ */
 var _maps = {};
-function renderLocMap(prefix, lat, lng, km) {
+var _gmapsKey = '';
+var _gmapsReady = false;
+var _gmapsLoading = null;
+
+function setDistLabel(distId, km) {
+  var distEl = document.getElementById(distId);
+  if (!distEl || km == null) return;
+  distEl.textContent = 'Jarak: ' + (km < 1 ? (km * 1000).toFixed(0) + ' m' : km.toFixed(2) + ' km');
+}
+
+function loadGoogleMaps(key) {
+  if (!key) return Promise.resolve(false);
+  if (_gmapsReady && window.google && google.maps) return Promise.resolve(true);
+  if (_gmapsLoading) return _gmapsLoading;
+  _gmapsLoading = new Promise(function(resolve) {
+    var cbName = '__gmapsReady_' + Date.now();
+    window[cbName] = function() {
+      _gmapsReady = true;
+      try { delete window[cbName]; } catch (_) {}
+      resolve(true);
+    };
+    var s = document.createElement('script');
+    s.async = true;
+    s.defer = true;
+    s.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(key) + '&callback=' + cbName;
+    s.onerror = function() {
+      _gmapsLoading = null;
+      resolve(false);
+    };
+    document.head.appendChild(s);
+    /* timeout 12s */
+    setTimeout(function() {
+      if (!_gmapsReady) { _gmapsLoading = null; resolve(false); }
+    }, 12000);
+  });
+  return _gmapsLoading;
+}
+
+async function ensureMapsEngine() {
+  if (_gmapsReady && window.google && google.maps) return 'google';
+  if (_gmapsKey) {
+    var ok = await loadGoogleMaps(_gmapsKey);
+    if (ok) return 'google';
+  }
+  if (typeof L !== 'undefined') return 'leaflet';
+  return 'none';
+}
+
+function renderLocMapGoogle(prefix, lat, lng, km) {
   var elId = prefix + 'Map';
-  var distId = prefix + 'MapDist';
+  var el = document.getElementById(elId);
+  if (!el) return;
+  var sppg = getSPPG();
+  setDistLabel(prefix + 'MapDist', km);
+  var mePos = { lat: Number(lat), lng: Number(lng) };
+  var sppgPos = { lat: Number(sppg.lat), lng: Number(sppg.lng) };
+  if (!_maps[prefix] || _maps[prefix].engine !== 'google') {
+    el.innerHTML = '';
+    var map = new google.maps.Map(el, {
+      zoom: 14,
+      center: mePos,
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: true,
+      zoomControl: true
+    });
+    _maps[prefix] = {
+      engine: 'google',
+      map: map,
+      me: new google.maps.Marker({
+        position: mePos, map: map, title: 'Lokasi Anda',
+        icon: { path: google.maps.SymbolPath.CIRCLE, scale: 9, fillColor: '#4f46e5', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 }
+      }),
+      sppg: new google.maps.Marker({
+        position: sppgPos, map: map, title: 'SPPG',
+        icon: { path: google.maps.SymbolPath.CIRCLE, scale: 9, fillColor: '#ef4444', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 }
+      }),
+      line: new google.maps.Polyline({
+        path: [mePos, sppgPos], geodesic: true, strokeColor: '#4f46e5', strokeOpacity: 0.85, strokeWeight: 3, map: map
+      }),
+      infoMe: new google.maps.InfoWindow({ content: '<b>Lokasi Anda</b>' }),
+      infoSppg: new google.maps.InfoWindow({ content: '<b>SPPG</b>' })
+    };
+    _maps[prefix].me.addListener('click', function() { _maps[prefix].infoMe.open(map, _maps[prefix].me); });
+    _maps[prefix].sppg.addListener('click', function() { _maps[prefix].infoSppg.open(map, _maps[prefix].sppg); });
+  } else {
+    var m = _maps[prefix];
+    m.me.setPosition(mePos);
+    m.sppg.setPosition(sppgPos);
+    m.line.setPath([mePos, sppgPos]);
+  }
+  var bounds = new google.maps.LatLngBounds();
+  bounds.extend(mePos);
+  bounds.extend(sppgPos);
+  _maps[prefix].map.fitBounds(bounds, 48);
+  setTimeout(function() {
+    try { google.maps.event.trigger(_maps[prefix].map, 'resize'); } catch (_) {}
+  }, 200);
+}
+
+function renderLocMapLeaflet(prefix, lat, lng, km) {
+  var elId = prefix + 'Map';
   var el = document.getElementById(elId);
   if (!el || typeof L === 'undefined') {
-    if (document.getElementById(distId) && km != null) {
-      document.getElementById(distId).textContent = 'Jarak: ' + (km < 1 ? (km * 1000).toFixed(0) + ' m' : km.toFixed(2) + ' km');
-    }
+    setDistLabel(prefix + 'MapDist', km);
     return;
   }
   var sppg = getSPPG();
-  var distEl = document.getElementById(distId);
-  if (distEl && km != null) {
-    distEl.textContent = 'Jarak: ' + (km < 1 ? (km * 1000).toFixed(0) + ' m' : km.toFixed(2) + ' km');
-  }
+  setDistLabel(prefix + 'MapDist', km);
   try {
-    if (!_maps[prefix]) {
+    if (!_maps[prefix] || _maps[prefix].engine !== 'leaflet') {
+      el.innerHTML = '';
       _maps[prefix] = {
+        engine: 'leaflet',
         map: L.map(elId, { zoomControl: true, attributionControl: true }),
         layer: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 19,
-          attribution: '&copy; OpenStreetMap'
+          maxZoom: 19, attribution: '&copy; OpenStreetMap'
         }),
-        me: null,
-        sppg: null,
-        line: null
+        me: null, sppg: null, line: null
       };
       _maps[prefix].layer.addTo(_maps[prefix].map);
     }
@@ -1546,18 +1654,48 @@ function renderLocMap(prefix, lat, lng, km) {
     m.map.fitBounds(L.latLngBounds([meLatLng, sppgLatLng]).pad(0.35));
     setTimeout(function() { try { m.map.invalidateSize(); } catch (_) {} }, 200);
   } catch (err) {
-    console.warn('Map error', err);
+    console.warn('Map Leaflet error', err);
   }
 }
 
-/* ============ COMPRESS IMAGE (mobile-optimized) ============ */
-/* Target ≤ ~400KB base64 agar request Apps Script cepat di 4G */
-var FOTO_MAX_SIDE = 960;
-var FOTO_QUALITY = 0.62;
-var FOTO_MAX_BYTES = 420 * 1024; /* batas soft setelah encode */
+async function renderLocMap(prefix, lat, lng, km) {
+  if (lat == null || lng == null) return;
+  setDistLabel(prefix + 'MapDist', km);
+  var engine = await ensureMapsEngine();
+  if (engine === 'google') {
+    try { renderLocMapGoogle(prefix, lat, lng, km); return; }
+    catch (e) { console.warn('GMaps fail, fallback OSM', e); }
+  }
+  renderLocMapLeaflet(prefix, lat, lng, km);
+}
+
+async function initMapsKeyFromServer() {
+  try {
+    var r = await apiCall('get_maps_key', {});
+    var key = (r && r.data && r.data.key) ? String(r.data.key) : '';
+    _gmapsKey = key;
+    var hint = $('#mapsKeyHint');
+    var inp = $('#gmapsApiKey');
+    if (inp && isAdminSess()) inp.value = key;
+    if (hint) hint.textContent = key ? 'Maps: Google API aktif' : 'Maps: OpenStreetMap (tanpa key)';
+    if (key) await loadGoogleMaps(key);
+  } catch (e) { /* ignore */ }
+}
+
+/* ============ COMPRESS IMAGE (cepat + ringan untuk mobile) ============ */
+var FOTO_MAX_SIDE = 800;          /* cukup jelas, encode jauh lebih cepat */
+var FOTO_QUALITY = 0.58;
+var FOTO_MAX_BYTES = 280 * 1024;  /* ~280KB binary → request GAS lebih cepat */
 
 function _isMobileUA() {
   return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '');
+}
+function _fotoProgress(area, text) {
+  if (!area) return;
+  var ld = area.querySelector('.foto-loading');
+  if (!ld) return;
+  var t = ld.querySelector('[data-fl-text]');
+  if (t) t.textContent = text;
 }
 /* Baca orientasi EXIF (JPEG) — hindari foto miring dari kamera HP */
 function _readExifOrientation(file) {
@@ -1609,88 +1747,99 @@ function _drawOriented(ctx, img, w, h, orient) {
   }
   ctx.drawImage(img, 0, 0, w, h);
 }
-function compressImage(file, maxSide, quality) {
-  maxSide = maxSide || (_isMobileUA() ? 960 : 1280);
-  quality = quality || (_isMobileUA() ? 0.62 : 0.7);
+function _loadImageEl(file) {
   return new Promise(function(resolve, reject) {
-    if (!file || !file.type || file.type.indexOf('image/') !== 0) {
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function() { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = function() { URL.revokeObjectURL(url); reject(new Error('Gagal memuat gambar')); };
+    img.src = url;
+  });
+}
+async function _loadBitmap(file) {
+  if (typeof createImageBitmap === 'function') {
+    try {
+      return await createImageBitmap(file, { imageOrientation: 'from-image' });
+    } catch (_) {
+      try { return await createImageBitmap(file); } catch (__) {}
+    }
+  }
+  return null;
+}
+function compressImage(file, maxSide, quality) {
+  maxSide = maxSide || (_isMobileUA() ? FOTO_MAX_SIDE : 1024);
+  quality = quality || (_isMobileUA() ? FOTO_QUALITY : 0.65);
+  return new Promise(function(resolve, reject) {
+    if (!file) { reject(new Error('Tidak ada file')); return; }
+    var t = (file.type || '').toLowerCase();
+    if (t && t.indexOf('image/') !== 0 && t !== '') {
       reject(new Error('File bukan gambar'));
       return;
     }
-    /* Tolak file ekstrem (>25MB) sebelum decode */
-    if (file.size > 25 * 1024 * 1024) {
-      reject(new Error('Ukuran foto terlalu besar (maks 25MB)'));
+    if (file.size > 20 * 1024 * 1024) {
+      reject(new Error('Ukuran foto terlalu besar (maks 20MB)'));
       return;
     }
-    var url = URL.createObjectURL(file);
-    var img = new Image();
-    img.onload = function() {
-      URL.revokeObjectURL(url);
-      _readExifOrientation(file).then(function(orient) {
-        try {
-          var srcW = img.naturalWidth || img.width;
-          var srcH = img.naturalHeight || img.height;
-          var swap = orient >= 5 && orient <= 8;
-          var outW = swap ? srcH : srcW;
-          var outH = swap ? srcW : srcH;
-          /* Scale down by longest side */
-          var scale = Math.min(1, maxSide / Math.max(outW, outH));
-          outW = Math.max(1, Math.round(outW * scale));
-          outH = Math.max(1, Math.round(outH * scale));
-          var canvas = document.createElement('canvas');
-          canvas.width = outW;
-          canvas.height = outH;
-          var ctx = canvas.getContext('2d', { alpha: false });
-          ctx.fillStyle = '#fff';
-          ctx.fillRect(0, 0, outW, outH);
-          ctx.save();
-          /* Gambar dengan orientasi benar (draw di ukuran sumber lalu scale via canvas size) */
-          if (orient > 1) {
-            /* Gunakan canvas sementara di resolusi sumber terskala */
-            var tw = Math.round(srcW * scale);
-            var th = Math.round(srcH * scale);
-            if (swap) { canvas.width = th; canvas.height = tw; outW = th; outH = tw; }
-            else { canvas.width = tw; canvas.height = th; outW = tw; outH = th; }
-            ctx = canvas.getContext('2d', { alpha: false });
-            ctx.fillStyle = '#fff';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.save();
-            _drawOriented(ctx, img, tw, th, orient);
-            ctx.restore();
-          } else {
-            ctx.drawImage(img, 0, 0, outW, outH);
-          }
-          /* Turunkan quality bertahap jika masih terlalu besar */
-          var q = quality;
-          var dataUrl = canvas.toDataURL('image/jpeg', q);
-          var guard = 0;
-          while (dataUrl.length > FOTO_MAX_BYTES * 1.37 && q > 0.35 && guard < 5) {
-            q = Math.max(0.35, q - 0.1);
-            dataUrl = canvas.toDataURL('image/jpeg', q);
-            guard++;
-          }
-          /* Jika masih besar, turunkan resolusi lagi */
-          if (dataUrl.length > FOTO_MAX_BYTES * 1.37 && Math.max(canvas.width, canvas.height) > 640) {
-            var s2 = 640 / Math.max(canvas.width, canvas.height);
-            var c2 = document.createElement('canvas');
-            c2.width = Math.round(canvas.width * s2);
-            c2.height = Math.round(canvas.height * s2);
-            c2.getContext('2d').drawImage(canvas, 0, 0, c2.width, c2.height);
-            dataUrl = c2.toDataURL('image/jpeg', 0.55);
-            try { canvas.width = 0; canvas.height = 0; } catch (_) {}
-          }
-          try { canvas.width = 0; canvas.height = 0; } catch (_) {}
-          resolve(dataUrl);
-        } catch (err) {
-          reject(err);
-        }
-      });
-    };
-    img.onerror = function() {
-      URL.revokeObjectURL(url);
-      reject(new Error('Gagal memuat gambar'));
-    };
-    img.src = url;
+    /* Parallel: EXIF + decode */
+    Promise.all([
+      _readExifOrientation(file),
+      _loadBitmap(file).then(function(bmp) {
+        if (bmp) return { kind: 'bmp', src: bmp };
+        return _loadImageEl(file).then(function(img) { return { kind: 'img', src: img }; });
+      })
+    ]).then(function(pair) {
+      var orient = pair[0] || 1;
+      var loaded = pair[1];
+      var src = loaded.src;
+      var srcW = src.width || src.naturalWidth || 0;
+      var srcH = src.height || src.naturalHeight || 0;
+      if (!srcW || !srcH) throw new Error('Dimensi gambar tidak valid');
+      /* createImageBitmap dengan imageOrientation sudah benar → skip EXIF rotate */
+      var useOrient = (loaded.kind === 'bmp' && orient) ? 1 : orient;
+      var swap = useOrient >= 5 && useOrient <= 8;
+      var outW = swap ? srcH : srcW;
+      var outH = swap ? srcW : srcH;
+      var scale = Math.min(1, maxSide / Math.max(outW, outH));
+      outW = Math.max(1, Math.round(outW * scale));
+      outH = Math.max(1, Math.round(outH * scale));
+      var canvas = document.createElement('canvas');
+      canvas.width = outW;
+      canvas.height = outH;
+      var ctx = canvas.getContext('2d', { alpha: false, willReadFrequently: false });
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, outW, outH);
+      if (useOrient > 1) {
+        var tw = Math.round(srcW * scale);
+        var th = Math.round(srcH * scale);
+        if (swap) { canvas.width = th; canvas.height = tw; outW = th; outH = tw; }
+        else { canvas.width = tw; canvas.height = th; }
+        ctx = canvas.getContext('2d', { alpha: false });
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+        _drawOriented(ctx, src, tw, th, useOrient);
+        ctx.restore();
+      } else {
+        ctx.drawImage(src, 0, 0, outW, outH);
+      }
+      try { if (src.close) src.close(); } catch (_) {}
+      /* Encode sekali; jika besar, resize sekali lagi (hindari loop quality) */
+      var dataUrl = canvas.toDataURL('image/jpeg', quality);
+      var limit = FOTO_MAX_BYTES * 1.37; /* base64 overhead */
+      if (dataUrl.length > limit && Math.max(canvas.width, canvas.height) > 480) {
+        var s2 = 480 / Math.max(canvas.width, canvas.height);
+        var c2 = document.createElement('canvas');
+        c2.width = Math.max(1, Math.round(canvas.width * s2));
+        c2.height = Math.max(1, Math.round(canvas.height * s2));
+        c2.getContext('2d', { alpha: false }).drawImage(canvas, 0, 0, c2.width, c2.height);
+        dataUrl = c2.toDataURL('image/jpeg', 0.52);
+        try { c2.width = 0; c2.height = 0; } catch (_) {}
+      }
+      try { canvas.width = 0; canvas.height = 0; } catch (_) {}
+      resolve(dataUrl);
+    }).catch(function(err) {
+      reject(err && err.message ? err : new Error('Gagal kompres foto'));
+    });
   });
 }
 function fotoSizeLabel(dataUrl) {
@@ -1752,37 +1901,101 @@ async function loadInstansi() {
   hydrate($('#tabelInstansi'));
 }
 async function loadTugas() {
-  $('#tabelTugas').innerHTML = skelRows(4, 10);
-  const { data } = await apiCall('tugas');
-  state.tugas = data;
-  $('#tabelTugas').innerHTML = data.length ? data.map((r,i) => `
+  var cols = isAdminSess() ? 10 : 9;
+  $('#tabelTugas').innerHTML = skelRows(4, cols);
+  var s = sess() || {};
+  var params = { by: s.username || '' };
+  if (!isAdminSess() && s.id_driver) params.id_driver = s.id_driver;
+  const { data } = await apiCall('tugas', params);
+  state.tugas = data || [];
+  var title = $('#tugasListTitle'), sub = $('#tugasListSub');
+  if (!isAdminSess()) {
+    if (title) title.textContent = 'Tugas Saya';
+    if (sub) sub.textContent = 'Tugas antaran yang ditugaskan ke Anda';
+  } else {
+    if (title) title.textContent = 'Riwayat Tugas Antaran';
+    if (sub) sub.textContent = 'Semua tugas pengiriman';
+  }
+  $('#tabelTugas').innerHTML = state.tugas.length ? state.tugas.map((r,i) => `
     <tr><td>${i+1}</td><td>${esc(r.tanggal)}</td>
     <td><div class="cell-main">${esc(r.driver)}</div><div class="cell-sub">${esc(r.nopol)}</div></td>
     <td><div class="cell-main">${esc(r.instansi)}</div>${r.catatan ? `<div class="cell-sub">${esc(r.catatan)}</div>` : ''}</td>
     <td>${r.pk}</td><td>${r.pb}</td><td><b>${r.total}</b></td>
     <td>${statBadge(r.status)}</td><td>${esc(r.waktu_antar || '—')}</td>
     ${actBtns('tugas', r.id)}</tr>`).join('')
-    : emptyRow(isAdminSess() ? 10 : 9, 'Belum ada tugas antaran');
+    : emptyRow(cols, isAdminSess() ? 'Belum ada tugas antaran' : 'Belum ada tugas untuk Anda. Hubungi admin.');
   hydrate($('#tabelTugas'));
 }
 function fotoCell(url, label) {
-  if (!url) return '—';
+  if (!url) return '\u2014';
+  var safeUrl = esc(url);
+  var safeLabel = esc(label || 'Foto');
+  var oc = "openFotoLightbox('" + safeUrl + "')";
+  var oe = "onFotoThumbError(this,'" + safeUrl + "')";
   return '<div class="foto-cell">' +
-    '<img class="foto-thumb" src="' + esc(url) + '" alt="' + esc(label) + '" loading="lazy" onclick="openFotoLightbox(\'' + esc(url) + '\')">' +
-    '<a class="link" href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(label) + '</a></div>';
+    '<img class="foto-thumb" src="' + safeUrl + '" alt="' + safeLabel + '" loading="lazy" ' +
+    'onerror="' + oe + '" ' +
+    'onclick="' + oc + '">' +
+    (label ? '<a class="link" href="' + safeUrl + '" target="_blank" rel="noopener">' + safeLabel + '</a>' : '') + '</div>';
 }
-function lokasiCell(r) {
-  var loc = '';
-  if (r.lat_antar != null && r.lng_antar != null && !isNaN(r.lat_antar)) {
-    loc = Number(r.lat_antar).toFixed(5) + ', ' + Number(r.lng_antar).toFixed(5);
+var _fotoProxyCache = {};
+async function loadFotoProxy(originalUrl) {
+  if (_fotoProxyCache[originalUrl]) return _fotoProxyCache[originalUrl];
+  try {
+    var r = await apiCall('get_foto_data', { url: originalUrl });
+    if (r && r.data && r.data.data) {
+      var dataUrl = 'data:' + (r.data.mime || 'image/jpeg') + ';base64,' + r.data.data;
+      _fotoProxyCache[originalUrl] = dataUrl;
+      return dataUrl;
+    }
+  } catch (e) { console.warn('Foto proxy gagal:', e); }
+  return originalUrl;
+}
+/* Thumbnail gagal load langsung dari Drive (lh3) → coba ambil via proxy base64
+   supaya foto tetap tampil meski link Drive belum siap / diblokir */
+async function onFotoThumbError(imgEl, originalUrl) {
+  if (!imgEl || imgEl.dataset.proxyTried === '1') {
+    if (imgEl) imgEl.style.opacity = '.3';
+    return;
   }
-  var html = '<div style="font-size:11px;line-height:1.45">';
-  if (loc) html += '<div class="cell-main">' + esc(loc) + '</div>';
-  if (r.alamat) html += '<div class="cell-sub" style="white-space:normal;max-width:160px">' + esc(r.alamat) + '</div>';
-  html += '<div style="font-weight:700;color:var(--primary);margin-top:2px">' + esc(r.jarak || '—') + '</div>';
-  if (r.jarak_jemput) html += '<div class="cell-sub">Jemput: ' + esc(r.jarak_jemput) + '</div>';
-  html += '</div>';
-  return html;
+  imgEl.dataset.proxyTried = '1';
+  try {
+    var proxyUrl = await loadFotoProxy(originalUrl);
+    if (proxyUrl && proxyUrl !== originalUrl) {
+      imgEl.onerror = function() { this.onerror = null; this.style.opacity = '.3'; };
+      imgEl.src = proxyUrl;
+      return;
+    }
+  } catch (e) {}
+  imgEl.style.opacity = '.3';
+}
+
+function lokasiCell(r) {
+  var h = '<div style="font-size:11px;line-height:1.45">';
+  if (r.lat_antar != null && r.lng_antar != null && !isNaN(r.lat_antar)) {
+    var mu = 'https://www.google.com/maps?q=' + Number(r.lat_antar).toFixed(6) + ',' + Number(r.lng_antar).toFixed(6);
+    var oc = "window.open('" + mu + "','_blank')";
+    h += '<div class="cell-main" style="cursor:pointer" title="Klik buka Google Maps" ' +
+      'onclick="' + oc + '">' +
+      Number(r.lat_antar).toFixed(5) + ', ' + Number(r.lng_antar).toFixed(5) + '</div>';
+  }
+  if (r.alamat) h += '<div class="cell-sub" style="white-space:normal;max-width:160px">' + esc(r.alamat) + '</div>';
+  h += '<div style="font-weight:700;color:var(--primary);margin-top:2px">' + esc(r.jarak || '—') + '</div>';
+  if (r.jarak_jemput) {
+    h += '<div style="margin-top:4px;padding-top:4px;border-top:1px dashed var(--border)">';
+    h += '<div style="font-weight:700;color:#0ea5e9;font-size:10px">JEMPUT</div>';
+    if (r.lat_jemput != null && r.lng_jemput != null && !isNaN(r.lat_jemput)) {
+      var muj = 'https://www.google.com/maps?q=' + Number(r.lat_jemput).toFixed(6) + ',' + Number(r.lng_jemput).toFixed(6);
+      var ocj = "window.open('" + muj + "','_blank')";
+      h += '<div class="cell-sub" style="cursor:pointer" ' +
+        'onclick="' + ocj + '">' +
+        Number(r.lat_jemput).toFixed(5) + ', ' + Number(r.lng_jemput).toFixed(5) + '</div>';
+    }
+    if (r.alamat_jemput) h += '<div class="cell-sub" style="white-space:normal;max-width:160px">' + esc(r.alamat_jemput) + '</div>';
+    h += '<div class="cell-sub">Jarak: ' + esc(r.jarak_jemput) + '</div></div>';
+  }
+  h += '</div>';
+  return h;
 }
 function openFotoLightbox(url) {
   var box = $('#fotoLightbox');
@@ -1794,9 +2007,21 @@ function openFotoLightbox(url) {
     box.addEventListener('click', function() { box.classList.remove('show'); });
     document.body.appendChild(box);
   }
-  box.querySelector('img').src = url;
+  var img = box.querySelector('img');
+  img.style.opacity = '0.5';
+  img.src = url;
+  img.onload = function() { img.style.opacity = '1'; };
+  img.onerror = async function() {
+    img.onerror = null;
+    try {
+      var proxyUrl = await loadFotoProxy(url);
+      if (proxyUrl !== url) { img.src = proxyUrl; img.onload = function() { img.style.opacity = '1'; }; }
+      else { img.alt = 'Gagal memuat foto'; img.style.opacity = '1'; }
+    } catch (e) { img.alt = 'Gagal memuat foto'; img.style.opacity = '1'; }
+  };
   box.classList.add('show');
 }
+
 function fmtNowLocal() {
   try {
     return new Date().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'medium' });
@@ -1822,11 +2047,32 @@ function fillFotoMeta(prefix, lat, lng) {
       if (acc != null) t += ' · ' + accLabel(acc);
       jEl.textContent = t;
     }
+    loadReverseGeocode(prefix, lat, lng);
   } else {
     if (lEl) lEl.textContent = 'GPS belum aktif — tekan Refresh GPS';
     if (jEl) jEl.textContent = '—';
   }
   meta.classList.add('show');
+}
+var _geocodeCache = {};
+async function loadReverseGeocode(prefix, lat, lng) {
+  var key = lat.toFixed(4) + ',' + lng.toFixed(4);
+  if (_geocodeCache[key]) { _updateGeocodeUI(prefix, _geocodeCache[key]); return; }
+  try {
+    var r = await apiCall('reverse_geocode', { lat: lat, lng: lng });
+    if (r && r.data && r.data.alamat) {
+      _geocodeCache[key] = r.data.alamat;
+      _updateGeocodeUI(prefix, r.data.alamat);
+    }
+  } catch (e) {}
+}
+function _updateGeocodeUI(prefix, alamat) {
+  var lEl = $('#' + prefix + 'FotoLokasi');
+  if (lEl && alamat) {
+    var coordText = lEl.textContent;
+    lEl.textContent = coordText + ' → ' + alamat;
+    lEl.title = alamat;
+  }
 }
 async function loadDistribusi() {
   $('#tabelDistribusi').innerHTML = skelRows(3, 12);
@@ -2008,15 +2254,101 @@ function downloadAbsensiExcel() {
   toast('File Excel berhasil diunduh', true);
 }
 
-/* ============ ANTAR FORM SUBMISSION ============ */
-let antarFotoBase64 = '';
+/* ============ FOTO STATE (aman, tidak hilang saat submit) ============ */
+var fotoState = {
+  antar: { b64: '', lat: null, lng: null, acc: null, time: null, jarakKm: null },
+  jemput: { b64: '', lat: null, lng: null, acc: null, time: null, jarakKm: null }
+};
+function getFotoB64(kind) {
+  var st = fotoState[kind];
+  if (st && st.b64 && st.b64.indexOf('data:image') === 0) return st.b64;
+  /* Fallback: baca dari preview img */
+  var id = kind === 'antar' ? 'antarFotoPreview' : 'jemputFotoPreview';
+  var img = document.getElementById(id);
+  if (img && img.src && img.src.indexOf('data:image') === 0) {
+    if (st) st.b64 = img.src;
+    return img.src;
+  }
+  return '';
+}
+function clearFotoState(kind) {
+  fotoState[kind] = { b64: '', lat: null, lng: null, acc: null, time: null, jarakKm: null };
+}
+/** Kunci lokasi SAAT foto diambil/diupload + hitung jarak ke SPPG */
+async function lockFotoLocation(kind) {
+  var st = fotoState[kind];
+  var lat = kind === 'antar' ? gpsLat : gpsJemputLat;
+  var lng = kind === 'antar' ? gpsLng : gpsJemputLng;
+  var acc = kind === 'antar' ? gpsAcc : gpsJemputAcc;
+  /* Jika GPS belum ada, ambil sekarang dengan timeout lebih panjang */
+  if (lat == null || lng == null) {
+    var gpsValEl = kind === 'antar' ? $('#antarGpsVal') : $('#jemputGpsVal');
+    if (gpsValEl) { gpsValEl.textContent = 'Mengunci GPS untuk foto...'; gpsValEl.className = 'val'; }
+    try {
+      var pos = await getAccuratePosition({ targetAcc: 50, maxWait: 25000, minSamples: 1,
+        onProgress: function(best) {
+          if (gpsValEl) gpsValEl.textContent = 'Foto GPS: ' + fmtAcc(best.accuracy);
+        }
+      });
+      lat = pos.lat; lng = pos.lng; acc = pos.accuracy;
+      if (kind === 'antar') {
+        gpsLat = lat; gpsLng = lng; gpsAcc = acc;
+        $('#antarLat').value = lat; $('#antarLng').value = lng;
+        updateJarak();
+      } else {
+        gpsJemputLat = lat; gpsJemputLng = lng; gpsJemputAcc = acc;
+        $('#jemputLat').value = lat; $('#jemputLng').value = lng;
+        var jv2 = $('#jemputJarakVal');
+        if (jv2) {
+          var sppg2 = getSPPG();
+          var km2 = haversineKm(sppg2.lat, sppg2.lng, lat, lng);
+          jv2.textContent = km2 < 1 ? (km2 * 1000).toFixed(0) + ' m' : km2.toFixed(2) + ' km';
+        }
+      }
+    } catch (e) {
+      if (gpsValEl) { gpsValEl.textContent = 'GPS gagal: ' + (e.message || 'timeout'); gpsValEl.className = 'val err'; }
+      console.warn('lockFotoLocation GPS fallback gagal:', e);
+    }
+  }
+  st.lat = lat; st.lng = lng; st.acc = acc; st.time = Date.now();
+  if (lat != null && lng != null) {
+    var sppg = getSPPG();
+    st.jarakKm = haversineKm(sppg.lat, sppg.lng, lat, lng);
+    /* Update UI GPS + map + meta ke lokasi FOTO */
+    if (kind === 'antar') {
+      $('#antarLat').value = lat; $('#antarLng').value = lng;
+      renderLocMap('antar', lat, lng, st.jarakKm);
+      fillFotoMeta('antar', lat, lng);
+    } else {
+      $('#jemputLat').value = lat; $('#jemputLng').value = lng;
+      renderLocMap('jemput', lat, lng, st.jarakKm);
+      fillFotoMeta('jemput', lat, lng);
+    }
+  }
+  return st;
+}
 
+/* ============ ANTAR FORM SUBMISSION ============ */
 async function submitAntar(e) {
   e.preventDefault();
   const btn = $('#btnKirimAntar');
   btn.disabled = true; btn.classList.add('loading');
   try {
     const s = sess() || {};
+    var fotoB64 = getFotoB64('antar');
+    var st = fotoState.antar;
+    /* Lokasi wajib dari saat foto; fallback GPS live */
+    var lat = st.lat != null ? st.lat : (parseFloat($('#antarLat').value) || gpsLat);
+    var lng = st.lng != null ? st.lng : (parseFloat($('#antarLng').value) || gpsLng);
+    if (!fotoB64 || fotoB64.length < 100) {
+      toast('Foto belum siap. Ketuk Kamera atau Upload Galeri, tunggu preview muncul.', false);
+      return;
+    }
+    if (!lat || !lng) {
+      toast('Lokasi GPS belum tersedia. Tunggu koordinat GPS muncul (hijau), lalu kirim ulang.', false);
+      fetchGPS();
+      return;
+    }
     const payload = {
       action: 'add_distribusi',
       id_instansi: $('#selAntarInstansi').value,
@@ -2026,27 +2358,26 @@ async function submitAntar(e) {
       pk: $('#antarPk').value,
       pb: $('#antarPb').value,
       sesi: document.querySelector('#formAntar select[name=sesi]').value,
-      lat: $('#antarLat').value,
-      lng: $('#antarLng').value,
-      foto_base64: antarFotoBase64,
+      lat: lat,
+      lng: lng,
+      foto_base64: fotoB64,
       catatan: document.querySelector('#formAntar input[name=catatan]').value,
       by: s.username || ''
     };
-    if (!payload.id_instansi) { toast('Pilih instansi terlebih dahulu', false); btn.disabled = false; btn.classList.remove('loading'); return; }
-    if (!antarFotoBase64) { toast('Ambil foto bukti antar', false); btn.disabled = false; btn.classList.remove('loading'); return; }
-    if (!payload.lat || !payload.lng) { toast('GPS belum terdeteksi. Tunggu atau tap Refresh GPS.', false); btn.disabled = false; btn.classList.remove('loading'); return; }
+    if (!payload.id_instansi) { toast('Pilih instansi terlebih dahulu', false); return; }
     const json = await apiCall('add_distribusi', payload);
     toast(json.message, true);
     e.target.reset();
+    clearFotoState('antar');
     resetFotoUI({
-      setBase64: function(v) { antarFotoBase64 = v; },
+      setBase64: function() {},
       areaId: 'antarFotoArea', placeholderId: 'antarFotoPlaceholder', previewId: 'antarFotoPreview',
       inputId: 'antarFoto', camId: 'antarFotoCam', metaId: 'antarFotoMeta'
     });
     $('#antarGpsVal').textContent = 'Mengambil...';
     $('#antarGpsVal').className = 'val';
     $('#antarJarakVal').textContent = '\u2014';
-    gpsLat = null; gpsLng = null;
+    gpsLat = null; gpsLng = null; gpsAcc = null;
     fetchGPS();
     await Promise.all([loadTugas(), loadDistribusi(), loadDashboard()]);
   } catch (err) {
@@ -2131,7 +2462,7 @@ function renderUsersTable(data, reveal) {
     '<tr><td>' + (i+1) + '</td>' +
     '<td><div class="cell-main">' + esc(u.username) + '</div></td>' +
     '<td><div class="pw-cell"><span class="pw-hash' + (reveal ? ' revealed' : '') + '" title="' + esc(u.password_full) + '">' + esc(reveal ? u.password_full : u.password_masked) + '</span>' +
-    '<button type="button" class="pw-reveal-btn' + (reveal ? ' active' : '') + '" onclick="toggleRevealRow(this,' + i + ')" title="Lihat/sembunyikan hash"><span data-ic="' + (reveal ? 'eyeoff' : 'eye') + '"></span></button></div></td>' +
+    '<button type="button" class="pw-reveal-btn' + (reveal ? ' active' : '') + '" onclick="toggleRevealRow(this,' + i + ')" title="Lihat/sembunyikan password"><span data-ic="' + (reveal ? 'eyeoff' : 'eye') + '"></span></button></div></td>' +
     '<td style="font-family:monospace;font-size:11px;color:var(--muted)" title="' + esc(u.salt_full) + '">' + esc(reveal ? u.salt_full : u.salt_masked) + '</td>' +
     '<td>' + badge(u.role === 'admin' ? 'ok' : 'warn', u.role) + '</td>' +
     '<td><div class="cell-main">' + esc(u.nama) + '</div></td>' +
@@ -2521,6 +2852,7 @@ async function initSPPGFields() {
   if (lngEl) lngEl.value = sppg.lng;
   var hint = $('#sppgSourceHint');
   if (hint) hint.textContent = sppg.source === 'database' ? 'Tersimpan di database' : 'Default (belum disimpan admin)';
+  await initMapsKeyFromServer();
   updateJarak();
 }
 async function saveSPPGFields() {
@@ -2536,6 +2868,33 @@ async function saveSPPGFields() {
     var hint = $('#sppgSourceHint');
     if (hint) hint.textContent = 'Tersimpan di database';
     toast(r.message || 'Koordinat SPPG disimpan ke database', true);
+  } catch (e) { toast(e.message, false); }
+  finally { if (btn) { btn.disabled = false; btn.classList.remove('loading'); } }
+}
+async function saveMapsKey() {
+  if (!isAdminSess()) { toast('Hanya admin', false); return; }
+  var key = ($('#gmapsApiKey') && $('#gmapsApiKey').value || '').trim();
+  var btn = $('#btnSaveMapsKey');
+  if (btn) { btn.disabled = true; btn.classList.add('loading'); }
+  try {
+    var r = await apiCall('set_maps_key', { key: key, by: (sess() || {}).username || '' });
+    _gmapsKey = key;
+    _gmapsReady = false;
+    _gmapsLoading = null;
+    _maps = {};
+    if (key) {
+      var ok = await loadGoogleMaps(key);
+      if (!ok) toast('Key disimpan, tetapi gagal memuat Google Maps (cek API/billing/restriction)', false);
+      else toast(r.message || 'Google Maps aktif', true);
+    } else {
+      toast(r.message || 'API Key dikosongkan — pakai OSM', true);
+    }
+    var hint = $('#mapsKeyHint');
+    if (hint) hint.textContent = key ? 'Maps: Google API aktif' : 'Maps: OpenStreetMap (tanpa key)';
+    if (gpsLat != null && gpsLng != null) {
+      var sppg = getSPPG();
+      renderLocMap('antar', gpsLat, gpsLng, haversineKm(sppg.lat, sppg.lng, gpsLat, gpsLng));
+    }
   } catch (e) { toast(e.message, false); }
   finally { if (btn) { btn.disabled = false; btn.classList.remove('loading'); } }
 }
@@ -2685,54 +3044,113 @@ $('#selAntarInstansi').addEventListener('change', () => {
   }
 });
 
-/* Helper: proses file foto → preview + base64 (mobile-friendly) */
-async function handleFotoFile(file, opts) {
-  if (!file) return;
-  var area = $(opts.areaId);
-  var placeholder = $(opts.placeholderId);
-  if (!area) return;
-  /* Loading state */
-  area.classList.add('is-processing');
-  if (placeholder) {
-    placeholder.style.display = '';
-    placeholder.innerHTML = '<span data-ic="refresh"></span><div>Memproses foto…</div>';
-    hydrate(placeholder);
+function ensureFotoLoading(area) {
+  var ld = area.querySelector('.foto-loading');
+  if (!ld) {
+    ld = document.createElement('div');
+    ld.className = 'foto-loading';
+    ld.innerHTML = '<div class="spinner"></div><div data-fl-text>Memproses foto…</div><div style="font-size:11px;font-weight:600;opacity:.85">Jangan tutup halaman</div>';
+    area.appendChild(ld);
   }
+  return ld;
+}
+function showInstantPreview(area, file, previewId, placeholder) {
   try {
-    var b64 = await compressImage(file);
-    opts.setBase64(b64);
-    var preview = document.getElementById(opts.previewId);
+    var preview = document.getElementById(previewId);
     if (!preview) {
       preview = document.createElement('img');
-      preview.id = opts.previewId;
+      preview.id = previewId;
       preview.alt = 'Preview';
       preview.decoding = 'async';
       area.insertBefore(preview, area.firstChild);
     }
-    preview.src = b64;
-    if (placeholder) {
-      placeholder.style.display = 'none';
-      placeholder.innerHTML = '<span data-ic="camera"></span><div>Ambil foto atau upload gambar</div>';
-    }
+    /* Preview cepat dari blob (sebelum kompres selesai) */
+    if (preview._blobUrl) { try { URL.revokeObjectURL(preview._blobUrl); } catch (_) {} }
+    preview._blobUrl = URL.createObjectURL(file);
+    preview.src = preview._blobUrl;
+    if (placeholder) placeholder.style.display = 'none';
     area.classList.add('has-img');
-    area.classList.remove('is-processing');
-    /* Label ukuran */
-    var sizeEl = document.getElementById(opts.previewId + 'Size');
-    if (!sizeEl) {
-      sizeEl = document.createElement('div');
-      sizeEl.id = opts.previewId + 'Size';
-      sizeEl.className = 'foto-size-label';
-      area.parentNode.insertBefore(sizeEl, area.nextSibling);
+    return preview;
+  } catch (_) { return null; }
+}
+/* Helper: preview instan + kompres paralel dengan GPS */
+async function handleFotoFile(file, opts) {
+  if (!file) { toast('Tidak ada file dipilih', false); return; }
+  var area = $(opts.areaId);
+  var placeholder = $(opts.placeholderId);
+  if (!area) return;
+  var kind = opts.kind || 'antar';
+  ensureFotoLoading(area);
+  area.classList.add('is-processing');
+  _fotoProgress(area, 'Membaca foto…');
+  /* Preview langsung agar UI terasa responsif */
+  var preview = showInstantPreview(area, file, opts.previewId, placeholder);
+  var sizeEl = document.getElementById(opts.previewId + 'Size');
+  if (!sizeEl) {
+    sizeEl = document.createElement('div');
+    sizeEl.id = opts.previewId + 'Size';
+    sizeEl.className = 'foto-size-label';
+    area.parentNode.insertBefore(sizeEl, area.nextSibling);
+  }
+  sizeEl.textContent = 'Mengompres…';
+  try {
+    _fotoProgress(area, 'Mengompres foto…');
+    /* Kompres + kunci GPS berjalan paralel */
+    var compressP = compressImage(file).catch(function() {
+      return new Promise(function(resolve, reject) {
+        var fr = new FileReader();
+        fr.onload = function() { resolve(fr.result); };
+        fr.onerror = function() { reject(new Error('Gagal baca file')); };
+        fr.readAsDataURL(file);
+      });
+    });
+    var gpsP = lockFotoLocation(kind).catch(function() { return fotoState[kind]; });
+    var b64 = await compressP;
+    if (!b64 || String(b64).indexOf('data:') !== 0) throw new Error('Hasil foto tidak valid');
+    fotoState[kind].b64 = b64;
+    if (typeof opts.setBase64 === 'function') opts.setBase64(b64);
+    if (preview) {
+      if (preview._blobUrl) { try { URL.revokeObjectURL(preview._blobUrl); } catch (_) {} preview._blobUrl = null; }
+      preview.src = b64;
     }
-    sizeEl.textContent = 'Preview siap · ' + fotoSizeLabel(b64);
-    /* Meta: waktu, lokasi, jarak SPPG */
+    _fotoProgress(area, 'Mengunci lokasi…');
+    sizeEl.textContent = 'Mengunci lokasi GPS…';
+    await gpsP;
+    if (fotoState[kind].lat == null) await lockFotoLocation(kind);
+    var finalLat = fotoState[kind].lat;
+    var finalLng = fotoState[kind].lng;
+    if (finalLat != null && finalLng != null) {
+      if (kind === 'antar') {
+        gpsLat = finalLat; gpsLng = finalLng;
+        $('#antarGpsVal').textContent = finalLat.toFixed(6) + ', ' + finalLng.toFixed(6);
+        $('#antarGpsVal').className = 'val ok';
+        updateJarak();
+      } else {
+        gpsJemputLat = finalLat; gpsJemputLng = finalLng;
+        var jv3 = $('#jemputGpsVal');
+        if (jv3) { jv3.textContent = finalLat.toFixed(6) + ', ' + finalLng.toFixed(6); jv3.className = 'val ok'; }
+        var jv4 = $('#jemputJarakVal');
+        if (jv4) {
+          var sppg3 = getSPPG();
+          var km3 = haversineKm(sppg3.lat, sppg3.lng, finalLat, finalLng);
+          jv4.textContent = km3 < 1 ? (km3 * 1000).toFixed(0) + ' m' : km3.toFixed(2) + ' km';
+        }
+      }
+    }
+    area.classList.remove('is-processing');
+    sizeEl.textContent = '✓ Foto tersimpan · ' + fotoSizeLabel(b64);
     if (typeof opts.onReady === 'function') opts.onReady(b64);
-    toast('Foto siap (' + fotoSizeLabel(b64) + ')', true);
+    var st = fotoState[kind];
+    var msg = 'Foto siap (' + fotoSizeLabel(b64) + ')';
+    if (st.jarakKm != null) msg += ' · ' + (st.jarakKm < 1 ? Math.round(st.jarakKm * 1000) + ' m' : st.jarakKm.toFixed(2) + ' km') + ' dari SPPG';
+    if (st.lat == null) msg += ' ⚠ GPS tidak tersedia';
+    toast(msg, true);
   } catch (e) {
     area.classList.remove('is-processing');
+    clearFotoState(kind);
     if (placeholder) {
       placeholder.style.display = '';
-      placeholder.innerHTML = '<span data-ic="camera"></span><div>Ambil foto atau upload gambar</div>';
+      placeholder.innerHTML = '<span data-ic="camera"></span><div>Gunakan tombol Kamera atau Upload</div>';
       hydrate(placeholder);
     }
     toast(e.message || 'Gagal memproses foto', false);
@@ -2778,10 +3196,10 @@ async function onAntarFotoChange() {
   var file = this.files && this.files[0];
   if (!file) return;
   await handleFotoFile(file, {
-    setBase64: function(v) { antarFotoBase64 = v; },
+    kind: 'antar',
+    setBase64: function(v) { fotoState.antar.b64 = v; },
     areaId: 'antarFotoArea', placeholderId: 'antarFotoPlaceholder', previewId: 'antarFotoPreview',
-    inputId: 'antarFoto', camId: 'antarFotoCam', metaId: 'antarFotoMeta',
-    onReady: function() { fillFotoMeta('antar', gpsLat, gpsLng); }
+    inputId: 'antarFoto', camId: 'antarFotoCam', metaId: 'antarFotoMeta'
   });
   try { this.value = ''; } catch (_) {}
 }
@@ -2809,7 +3227,10 @@ function setAntarMode(mode) {
   }
   setTimeout(function() {
     Object.keys(_maps).forEach(function(k) {
-      try { _maps[k].map.invalidateSize(); } catch (_) {}
+      try {
+        if (_maps[k].engine === 'google' && window.google) google.maps.event.trigger(_maps[k].map, 'resize');
+        else if (_maps[k].map && _maps[k].map.invalidateSize) _maps[k].map.invalidateSize();
+      } catch (_) {}
     });
   }, 250);
 }
@@ -2817,7 +3238,6 @@ $('#modeAntarBtn').addEventListener('click', function() { setAntarMode('antar');
 $('#modeJemputBtn').addEventListener('click', function() { setAntarMode('jemput'); });
 
 /* Pengambilan: load list pending */
-let jemputFotoBase64 = '';
 async function loadPendingJemput() {
   var sel = $('#selJemputDistribusi');
   sel.innerHTML = '<option value="">Memuat...</option>';
@@ -2881,7 +3301,7 @@ async function fetchGPSJemput() {
     }
     updateCompassUI();
     renderLocMap('jemput', gpsJemputLat, gpsJemputLng, km);
-    if (jemputFotoBase64) fillFotoMeta('jemput', gpsJemputLat, gpsJemputLng);
+    if (fotoState.jemput.b64) fillFotoMeta('jemput', gpsJemputLat, gpsJemputLng);
   } catch (e) {
     val.textContent = 'Gagal: ' + (e.message || 'GPS');
     val.className = 'val err';
@@ -2900,10 +3320,10 @@ async function onJemputFotoChange() {
   var file = this.files && this.files[0];
   if (!file) return;
   await handleFotoFile(file, {
-    setBase64: function(v) { jemputFotoBase64 = v; },
+    kind: 'jemput',
+    setBase64: function(v) { fotoState.jemput.b64 = v; },
     areaId: 'jemputFotoArea', placeholderId: 'jemputFotoPlaceholder', previewId: 'jemputFotoPreview',
-    inputId: 'jemputFoto', camId: 'jemputFotoCam', metaId: 'jemputFotoMeta',
-    onReady: function() { fillFotoMeta('jemput', gpsJemputLat, gpsJemputLng); }
+    inputId: 'jemputFoto', camId: 'jemputFotoCam', metaId: 'jemputFotoMeta'
   });
   try { this.value = ''; } catch (_) {}
 }
@@ -2917,20 +3337,30 @@ $('#formJemput').addEventListener('submit', async function(e) {
   try {
     var idDst = $('#selJemputDistribusi').value;
     if (!idDst) { toast('Pilih distribusi yang akan diambil', false); return; }
-    if (!jemputFotoBase64) { toast('Ambil / upload foto bukti pengambilan', false); return; }
-    if (!$('#jemputLat').value) { toast('GPS belum terdeteksi. Tap Refresh GPS.', false); return; }
+    var fotoB64 = getFotoB64('jemput');
+    var st = fotoState.jemput;
+    var lat = st.lat != null ? st.lat : (parseFloat($('#jemputLat').value) || gpsJemputLat);
+    var lng = st.lng != null ? st.lng : (parseFloat($('#jemputLng').value) || gpsJemputLng);
+    if (!fotoB64 || fotoB64.length < 100) {
+      toast('Foto belum siap. Ketuk Kamera atau Upload Galeri, tunggu preview muncul.', false);
+      return;
+    }
+    if (!lat || !lng) {
+      toast('Lokasi saat foto belum ada. Izinkan GPS, lalu ambil/upload foto lagi.', false);
+      return;
+    }
     var r = await apiCall('add_pengambilan', {
       id_distribusi: idDst,
-      foto_base64: jemputFotoBase64,
-      lat: $('#jemputLat').value,
-      lng: $('#jemputLng').value,
+      foto_base64: fotoB64,
+      lat: lat,
+      lng: lng,
       catatan: $('#jemputCatatan').value,
       by: (sess() || {}).username || ''
     });
     toast(r.message, true);
-    jemputFotoBase64 = '';
+    clearFotoState('jemput');
     resetFotoUI({
-      setBase64: function(v) { jemputFotoBase64 = v; },
+      setBase64: function() {},
       areaId: 'jemputFotoArea', placeholderId: 'jemputFotoPlaceholder', previewId: 'jemputFotoPreview',
       inputId: 'jemputFoto', camId: 'jemputFotoCam', metaId: 'jemputFotoMeta'
     });
@@ -2943,6 +3373,8 @@ $('#formJemput').addEventListener('submit', async function(e) {
 
 /* SPPG: save via tombol (admin only) */
 $('#btnSaveSppg').addEventListener('click', saveSPPGFields);
+var _btnMapsKey = $('#btnSaveMapsKey');
+if (_btnMapsKey) _btnMapsKey.addEventListener('click', saveMapsKey);
 
 /* Absensi: controls */
 $('#absBulan').addEventListener('change', loadAbsensiMatrix);
