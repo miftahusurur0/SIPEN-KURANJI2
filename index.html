@@ -545,17 +545,17 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
           </div>
           <div style="margin-top:14px"><label>Catatan</label><input name="catatan" placeholder="opsional"></div>
 
-          <div style="margin-top:14px"><label>Foto Bukti Antar *</label>
+          <div style="margin-top:14px"><label>Foto Bukti Antar * <span style="font-weight:600;color:var(--muted);text-transform:none;letter-spacing:0">(GPS dikunci saat foto)</span></label>
             <div class="foto-area" id="antarFotoArea">
-              <div class="placeholder" id="antarFotoPlaceholder"><span data-ic="camera"></span><div>Gunakan tombol Kamera atau Upload di bawah</div></div>
+              <div class="placeholder" id="antarFotoPlaceholder"><span data-ic="camera"></span><div>Ketuk Kamera (disarankan) atau Upload di bawah</div></div>
             </div>
-            <!-- input di luar area agar klik tidak bentrok -->
             <input type="file" accept="image/*" capture="environment" id="antarFotoCam" style="display:none">
             <input type="file" accept="image/jpeg,image/png,image/webp,image/*" id="antarFoto" style="display:none">
             <div class="foto-actions">
               <button type="button" class="btn btn-sm" id="btnAntarCam" style="background:var(--grad)"><span data-ic="camera"></span><span class="btn-label">Kamera</span></button>
               <button type="button" class="btn btn-sm" id="btnAntarUpload" style="background:#0ea5e9"><span data-ic="download"></span><span class="btn-label">Upload Galeri</span></button>
             </div>
+            <p style="font-size:11px;color:var(--muted);margin-top:8px;font-weight:600;line-height:1.45">Tunggu animasi selesai dan muncul <b style="color:var(--ok)">✓ Foto tersimpan</b> sebelum menekan Kirim.</p>
             <div class="foto-meta" id="antarFotoMeta">
               <div class="fm-row"><span class="fm-l">Waktu foto</span><span class="fm-v" id="antarFotoWaktu">—</span></div>
               <div class="fm-row"><span class="fm-l">Lokasi</span><span class="fm-v" id="antarFotoLokasi">—</span></div>
@@ -975,7 +975,7 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
 /* API_URL ganti dengan URL Web App kamu (akhiran /exec) */
-const API_URL = 'https://script.google.com/macros/s/AKfycbyPxpVI93ltXfzEsjJpHkqiiXeuLbrY6ErFGPZf12L1abzGVm5iGTcdvewYGJ5hg8uk/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbybWDQDXH_naDDjHrkPK7xbNaA8QSi9qJUQ7YxeeJT4owGI__79dM2srqaOweYvQH1M/exec';
 const IN_APPS = typeof google !== 'undefined' && !!google.script && !!google.script.run;
 
 /* ============ IKON SVG ============ */
@@ -1162,7 +1162,7 @@ function apiCall(action, data) {
   /* Kirim foto (payload lebih besar) dapat kena koneksi lambat/timeout —
      beri waktu lebih panjang & satu kali percobaan ulang otomatis khusus untuk itu */
   var isHeavy = (action === 'add_distribusi' || action === 'add_pengambilan');
-  var timeoutMs = isHeavy ? 60000 : 25000;
+  var timeoutMs = isHeavy ? 90000 : 25000;
   var maxAttempts = isHeavy ? 2 : 1;
   return (async () => {
     for (var attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -1729,7 +1729,7 @@ async function initMapsKeyFromServer() {
 /* ============ COMPRESS IMAGE (cepat + ringan untuk mobile) ============ */
 var FOTO_MAX_SIDE = 720;
 var FOTO_QUALITY = 0.52;
-var FOTO_MAX_BYTES = 180 * 1024;  /* ~180KB binary → aman untuk GAS */
+var FOTO_MAX_BYTES = 180 * 1024;  /* ~180KB binary → aman dikirim ke Apps Script */
 
 function _isMobileUA() {
   return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent || '');
@@ -1938,30 +1938,8 @@ async function loadInstansi() {
     <td>${d.nohp ? `<div class="cell-sub">${ic('phone')}${esc(d.nohp)}</div>` : '—'}</td>
     ${actBtns('instansi', d.id)}</tr>`).join('')
     : emptyRow(isAdminSess() ? 10 : 9, 'Belum ada instansi');
-  function _safePorsi(v) {
-    var n = parseInt(v, 10);
-    if (!isFinite(n) || n < 0 || n > 50000) return 0;
-    return n;
-  }
-  function _sumKat(s) {
-    var m = String(s || '').match(/\d+/g);
-    if (!m) return 0;
-    var t = 0;
-    for (var i = 0; i < m.length; i++) t += parseInt(m[i], 10) || 0;
-    return (t > 0 && t <= 50000) ? t : 0;
-  }
   const insOpts = '<option value="">— Pilih Instansi —</option>' +
-    data.map(function(d) {
-      var pk = _safePorsi(d.pk) || _sumKat(d.kategori_pk);
-      var pb = _safePorsi(d.pb) || _sumKat(d.kategori_pb);
-      return '<option value="' + esc(d.id) +
-        '" data-pk="' + pk +
-        '" data-pb="' + pb +
-        '" data-tipe="' + esc(d.tipe) +
-        '" data-kat-pk="' + esc(d.kategori_pk) +
-        '" data-kat-pb="' + esc(d.kategori_pb) +
-        '">' + esc(d.nama) + ' [' + (d.tipe || '-') + '] PK:' + pk + ' PB:' + pb + '</option>';
-    }).join('');
+    data.map(d => '<option value="' + esc(d.id) + '" data-pk="' + d.pk + '" data-pb="' + d.pb + '" data-tipe="' + esc(d.tipe) + '" data-kat-pk="' + esc(d.kategori_pk) + '" data-kat-pb="' + esc(d.kategori_pb) + '">' + esc(d.nama) + ' [' + (d.tipe || '-') + '] PK:' + d.pk + ' PB:' + d.pb + '</option>').join('');
   $('#selTugasInstansi').innerHTML = insOpts;
   $('#selAntarInstansi').innerHTML = insOpts;
   hydrate($('#tabelInstansi'));
@@ -2322,18 +2300,19 @@ function downloadAbsensiExcel() {
 
 /* ============ FOTO STATE (aman, tidak hilang saat submit) ============ */
 var fotoState = {
-  antar: { b64: '', lat: null, lng: null, acc: null, time: null, jarakKm: null, isFresh: null, ready: false, processing: false },
+  antar:  { b64: '', lat: null, lng: null, acc: null, time: null, jarakKm: null, isFresh: null, ready: false, processing: false },
   jemput: { b64: '', lat: null, lng: null, acc: null, time: null, jarakKm: null, isFresh: null, ready: false, processing: false }
 };
 function getFotoB64(kind) {
   var st = fotoState[kind];
-  if (st && st.b64 && st.b64.length > 100) {
-    /* Terima data:image/... atau pure base64 panjang */
-    if (st.b64.indexOf('data:image') === 0) return st.b64;
-    if (st.b64.indexOf('data:') === 0) return st.b64;
-    if (/^[A-Za-z0-9+/=]{100,}/.test(st.b64)) return 'data:image/jpeg;base64,' + st.b64;
+  if (st && st.b64 && String(st.b64).length > 100) {
+    var s = String(st.b64);
+    if (s.indexOf('data:image') === 0) return s;
+    if (s.indexOf('data:') === 0) return s;
+    /* pure base64 tanpa prefix */
+    if (/^[A-Za-z0-9+/=\s]{100,}/.test(s)) return 'data:image/jpeg;base64,' + s.replace(/\s/g, '');
   }
-  /* Fallback: preview img yang sudah data-URL (bukan blob:) */
+  /* Fallback: preview yang sudah data-URL (bukan blob:) */
   var id = kind === 'antar' ? 'antarFotoPreview' : 'jemputFotoPreview';
   var img = document.getElementById(id);
   if (img && img.src && img.src.indexOf('data:image') === 0 && img.src.length > 100) {
@@ -2341,12 +2320,6 @@ function getFotoB64(kind) {
     return img.src;
   }
   return '';
-}
-function isFotoReady(kind) {
-  var st = fotoState[kind];
-  if (st && st.processing) return false;
-  var b64 = getFotoB64(kind);
-  return !!(b64 && b64.length > 100);
 }
 function clearFotoState(kind) {
   fotoState[kind] = { b64: '', lat: null, lng: null, acc: null, time: null, jarakKm: null, isFresh: null, ready: false, processing: false };
@@ -2422,18 +2395,16 @@ async function submitAntar(e) {
     if (!$('#selAntarInstansi').value) { toast('Pilih instansi terlebih dahulu', false); return; }
     var st = fotoState.antar;
     if (st.processing) {
-      toast('Foto masih diproses. Tunggu sampai muncul "✓ Foto tersimpan", lalu ketuk Kirim.', false);
+      toast('Foto masih diproses. Tunggu sampai muncul "✓ Foto tersimpan", lalu ketuk Kirim lagi.', false);
       return;
     }
     var fotoB64 = getFotoB64('antar');
-    /* Lokasi prioritas: yang dikunci saat foto */
     var lat = (st.lat != null) ? st.lat : (parseFloat($('#antarLat').value) || gpsLat || null);
     var lng = (st.lng != null) ? st.lng : (parseFloat($('#antarLng').value) || gpsLng || null);
     if (!fotoB64 || fotoB64.length < 100) {
       toast('Foto belum siap. Ketuk Kamera atau Upload Galeri, tunggu sampai muncul "✓ Foto tersimpan".', false);
       return;
     }
-    /* Pastikan ukuran aman sebelum kirim */
     if (fotoB64.length * 0.75 > 450 * 1024) {
       try {
         fotoB64 = await _ensureSizeCap(fotoB64);
@@ -2442,12 +2413,9 @@ async function submitAntar(e) {
       } catch (_) {}
     }
     if (!lat || !lng) {
-      toast('Lokasi GPS belum terkunci saat foto. Aktifkan GPS, lalu ambil/upload foto lagi.', false);
+      toast('Lokasi GPS belum terkunci. Aktifkan GPS, lalu ambil/upload foto lagi.', false);
       fetchGPS();
       return;
-    }
-    if (st.isFresh === false) {
-      toast('Perhatian: lokasi memakai GPS cadangan. Pastikan GPS aktif untuk pengiriman berikutnya.', false);
     }
     var pkVal = Math.max(0, parseInt($('#antarPk').value, 10) || 0);
     var pbVal = Math.max(0, parseInt($('#antarPb').value, 10) || 0);
@@ -3128,33 +3096,20 @@ $('#selTugasInstansi').addEventListener('change', () => {
   if (ins) { if (ins.pk) $('#inPk').value = ins.pk; if (ins.pb) $('#inPb').value = ins.pb; }
 });
 
-/* Antar: instansi change -> autofill PK/PB aman & show info */
-$('#selAntarInstansi').addEventListener('change', function() {
+/* Antar: instansi change -> autofill PK/PB & show info */
+$('#selAntarInstansi').addEventListener('change', () => {
   const opt = $('#selAntarInstansi').selectedOptions[0];
-  function safeP(v) {
-    var n = parseInt(v, 10);
-    return (!isFinite(n) || n < 0 || n > 50000) ? 0 : n;
+  if (opt && opt.dataset.pk) {
+    $('#antarPk').value = opt.dataset.pk;
+    $('#antarPb').value = opt.dataset.pb;
   }
-  function sumKat(s) {
-    var m = String(s || '').match(/\d+/g);
-    if (!m) return 0;
-    var t = 0;
-    for (var i = 0; i < m.length; i++) t += parseInt(m[i], 10) || 0;
-    return (t > 0 && t <= 50000) ? t : 0;
-  }
-  var pk = 0, pb = 0;
-  if (opt && opt.value) {
-    pk = safeP(opt.getAttribute('data-pk')) || sumKat(opt.getAttribute('data-kat-pk'));
-    pb = safeP(opt.getAttribute('data-pb')) || sumKat(opt.getAttribute('data-kat-pb'));
-  }
-  $('#antarPk').value = String(pk);
-  $('#antarPb').value = String(pb);
+  /* Show info box with Tipe & Kategori */
   const infoBox = $('#antarInfoBox');
   if (opt && opt.value) {
     infoBox.style.display = 'block';
-    $('#antarInfoTipe').textContent = opt.getAttribute('data-tipe') || '—';
-    $('#antarInfoKatPK').textContent = opt.getAttribute('data-kat-pk') || '—';
-    $('#antarInfoKatPB').textContent = opt.getAttribute('data-kat-pb') || '—';
+    $('#antarInfoTipe').textContent = opt.dataset.tipe || '—';
+    $('#antarInfoKatPK').textContent = opt.dataset.katPk || '—';
+    $('#antarInfoKatPB').textContent = opt.dataset.katPb || '—';
   } else {
     infoBox.style.display = 'none';
   }
@@ -3221,7 +3176,7 @@ function _ensureSizeCap(dataUrl) {
     } catch (_) { resolve(dataUrl); }
   });
 }
-/* Helper: preview instan + kompres + kunci GPS SAAT foto */
+/* Helper: preview + animasi loading + kompres + kunci GPS saat foto */
 async function handleFotoFile(file, opts) {
   if (!file) { toast('Tidak ada file dipilih', false); return; }
   var area = $(opts.areaId);
@@ -3229,29 +3184,36 @@ async function handleFotoFile(file, opts) {
   if (!area) return;
   var kind = opts.kind || 'antar';
   var heicFile = _isLikelyHeic(file);
-  /* Tandai sedang proses — submit diblokir sampai ready */
+
+  /* Reset & tandai processing — Kirim diblokir sampai ready */
   clearFotoState(kind);
   fotoState[kind].processing = true;
   fotoState[kind].ready = false;
+
   ensureFotoLoading(area);
   area.classList.add('is-processing');
+  area.classList.add('has-img');
   _fotoProgress(area, 'Membaca foto…');
+
   var preview = showInstantPreview(area, file, opts.previewId, placeholder);
   var sizeEl = document.getElementById(opts.previewId + 'Size');
   if (!sizeEl) {
     sizeEl = document.createElement('div');
     sizeEl.id = opts.previewId + 'Size';
     sizeEl.className = 'foto-size-label';
-    area.parentNode.insertBefore(sizeEl, area.nextSibling);
+    if (area.parentNode) area.parentNode.insertBefore(sizeEl, area.nextSibling);
   }
-  sizeEl.textContent = 'Mengompres…';
+  sizeEl.textContent = '⏳ Mengompres foto…';
+  sizeEl.style.color = 'var(--primary)';
+
   var savedB64 = '';
   try {
     _fotoProgress(area, 'Mengompres foto…');
-    /* GPS dikunci SEGERA saat user ambil/upload foto (titik waktu foto) */
+    /* GPS dikunci SEGERA di momen user ambil/upload foto */
     var gpsP = lockFotoLocation(kind).catch(function() { return fotoState[kind]; });
+
     var compressP = compressImage(file).catch(function(errMain) {
-      console.warn('Kompres utama gagal, mencoba metode cadangan:', errMain);
+      console.warn('Kompres utama gagal, metode cadangan:', errMain);
       return _loadImageEl(file).then(function(img) {
         var maxSide = 640;
         var scale = Math.min(1, maxSide / Math.max(img.width, img.height));
@@ -3259,50 +3221,58 @@ async function handleFotoFile(file, opts) {
         canvas.width = Math.max(1, Math.round(img.width * scale));
         canvas.height = Math.max(1, Math.round(img.height * scale));
         var ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         return canvas.toDataURL('image/jpeg', 0.55);
       }).catch(function() {
-        var reason = heicFile
-          ? 'Format foto HEIC/HEIF belum didukung. Ketuk "Kamera" untuk memotret langsung, atau di iPhone: Setelan > Kamera > Format > Paling Kompatibel.'
-          : 'Foto tidak bisa diproses. Coba foto lain atau gunakan tombol Kamera.';
-        throw new Error(reason);
+        throw new Error(heicFile
+          ? 'Format HEIC/HEIF belum didukung. Ketuk "Kamera" untuk memotret langsung.'
+          : 'Foto tidak bisa diproses. Coba lagi atau gunakan tombol Kamera.');
       });
     });
+
     var b64 = await compressP;
     if (!b64 || String(b64).indexOf('data:') !== 0) throw new Error('Hasil foto tidak valid');
     b64 = await _ensureSizeCap(b64);
     savedB64 = b64;
-    /* Simpan SEGERA agar tidak hilang meski GPS masih berjalan */
+
+    /* SIMPAN SEGERA — jangan tunggu GPS selesai */
     fotoState[kind].b64 = b64;
     fotoState[kind].ready = true;
     if (typeof opts.setBase64 === 'function') opts.setBase64(b64);
+
     if (preview) {
       if (preview._blobUrl) { try { URL.revokeObjectURL(preview._blobUrl); } catch (_) {} preview._blobUrl = null; }
       preview.src = b64;
     }
-    area.classList.add('has-img');
-    _fotoProgress(area, 'Mengunci lokasi…');
-    sizeEl.textContent = 'Mengunci lokasi GPS…';
+
+    _fotoProgress(area, 'Mengunci lokasi GPS…');
+    sizeEl.textContent = '⏳ Mengunci lokasi GPS…';
     await gpsP;
     if (fotoState[kind].lat == null) {
       try { await lockFotoLocation(kind); } catch (_) {}
     }
-    /* Pastikan b64 tidak tertimpa clear di lockFotoLocation */
+    /* Jaga b64 tidak hilang setelah lock GPS */
     if (!fotoState[kind].b64 && savedB64) {
       fotoState[kind].b64 = savedB64;
       fotoState[kind].ready = true;
     }
+
     var finalLat = fotoState[kind].lat;
     var finalLng = fotoState[kind].lng;
     if (finalLat != null && finalLng != null) {
       if (kind === 'antar') {
         gpsLat = finalLat; gpsLng = finalLng;
-        $('#antarLat').value = finalLat;
-        $('#antarLng').value = finalLng;
-        $('#antarGpsVal').textContent = finalLat.toFixed(6) + ', ' + finalLng.toFixed(6);
-        $('#antarGpsVal').className = fotoState[kind].isFresh ? 'val ok' : 'val warn';
-        updateJarak();
+        var alat = $('#antarLat'), alng = $('#antarLng');
+        if (alat) alat.value = finalLat;
+        if (alng) alng.value = finalLng;
+        var ag = $('#antarGpsVal');
+        if (ag) {
+          ag.textContent = finalLat.toFixed(6) + ', ' + finalLng.toFixed(6);
+          ag.className = fotoState[kind].isFresh ? 'val ok' : 'val warn';
+        }
+        if (typeof updateJarak === 'function') updateJarak();
       } else {
         gpsJemputLat = finalLat; gpsJemputLng = finalLng;
         var jv3 = $('#jemputGpsVal');
@@ -3310,38 +3280,40 @@ async function handleFotoFile(file, opts) {
           jv3.textContent = finalLat.toFixed(6) + ', ' + finalLng.toFixed(6);
           jv3.className = fotoState[kind].isFresh ? 'val ok' : 'val warn';
         }
-        var jv4 = $('#jemputJarakVal');
-        if (jv4) {
-          var sppg3 = getSPPG();
-          var km3 = haversineKm(sppg3.lat, sppg3.lng, finalLat, finalLng);
-          jv4.textContent = km3 < 1 ? (km3 * 1000).toFixed(0) + ' m' : km3.toFixed(2) + ' km';
-        }
       }
     }
+
     fotoState[kind].processing = false;
     fotoState[kind].ready = true;
     area.classList.remove('is-processing');
+
     var gpsOk = finalLat != null && finalLng != null;
+    sizeEl.style.color = 'var(--ok)';
     sizeEl.textContent = gpsOk
       ? ('✓ Foto tersimpan · ' + fotoSizeLabel(b64) + (fotoState[kind].isFresh ? ' · GPS terkunci' : ' · GPS cadangan'))
       : ('✓ Foto tersimpan · ' + fotoSizeLabel(b64) + ' · ⚠ GPS belum ada');
+
     if (typeof opts.onReady === 'function') opts.onReady(b64);
-    var st = fotoState[kind];
     var msg = 'Foto siap (' + fotoSizeLabel(b64) + ')';
-    if (st.jarakKm != null) msg += ' · ' + (st.jarakKm < 1 ? Math.round(st.jarakKm * 1000) + ' m' : st.jarakKm.toFixed(2) + ' km') + ' dari SPPG';
-    if (st.lat == null) msg += ' ⚠ GPS tidak tersedia — aktifkan lokasi lalu foto ulang';
-    toast(msg, st.lat != null);
+    if (fotoState[kind].jarakKm != null) {
+      var jk = fotoState[kind].jarakKm;
+      msg += ' · ' + (jk < 1 ? Math.round(jk * 1000) + ' m' : jk.toFixed(2) + ' km') + ' dari SPPG';
+    }
+    if (!gpsOk) msg += ' — aktifkan GPS lalu foto ulang jika perlu';
+    toast(msg, true);
   } catch (e) {
     area.classList.remove('is-processing');
-    /* Jika kompres sudah berhasil tapi error di GPS, JANGAN hapus foto */
+    /* Jika kompres sudah OK tapi error lain (GPS), JANGAN hapus foto */
     if (savedB64) {
       fotoState[kind].b64 = savedB64;
       fotoState[kind].ready = true;
       fotoState[kind].processing = false;
+      sizeEl.style.color = 'var(--warn)';
       sizeEl.textContent = '✓ Foto tersimpan · ' + fotoSizeLabel(savedB64) + ' · ⚠ GPS gagal';
-      toast('Foto tersimpan, tapi GPS gagal. Aktifkan lokasi lalu ketuk Refresh GPS, atau foto ulang.', false);
+      toast('Foto tersimpan. GPS gagal — aktifkan lokasi lalu Refresh GPS, atau foto ulang.', false);
     } else {
       clearFotoState(kind);
+      sizeEl.textContent = '';
       if (placeholder) {
         placeholder.style.display = '';
         placeholder.innerHTML = '<span data-ic="camera"></span><div>Gunakan tombol Kamera atau Upload</div>';
@@ -3532,14 +3504,10 @@ $('#formJemput').addEventListener('submit', async function(e) {
   try {
     var idDst = $('#selJemputDistribusi').value;
     if (!idDst) { toast('Pilih distribusi yang akan diambil', false); return; }
-    var st = fotoState.jemput;
-    if (st.processing) {
-      toast('Foto masih diproses. Tunggu "✓ Foto tersimpan", lalu ketuk Kirim.', false);
-      return;
-    }
     var fotoB64 = getFotoB64('jemput');
-    var lat = (st.lat != null) ? st.lat : (parseFloat($('#jemputLat').value) || gpsJemputLat || null);
-    var lng = (st.lng != null) ? st.lng : (parseFloat($('#jemputLng').value) || gpsJemputLng || null);
+    var st = fotoState.jemput;
+    var lat = st.lat != null ? st.lat : (parseFloat($('#jemputLat').value) || gpsJemputLat);
+    var lng = st.lng != null ? st.lng : (parseFloat($('#jemputLng').value) || gpsJemputLng);
     if (!fotoB64 || fotoB64.length < 100) {
       toast('Foto belum siap. Ketuk Kamera atau Upload Galeri, tunggu sampai muncul "✓ Foto tersimpan".', false);
       return;
@@ -3549,7 +3517,7 @@ $('#formJemput').addEventListener('submit', async function(e) {
       return;
     }
     if (st.isFresh === false) {
-      toast('Perhatian: lokasi memakai GPS cadangan. Pastikan GPS aktif.', false);
+      toast('Perhatian: lokasi yang dikirim memakai GPS terakhir (bukan lokasi baru saat foto ini). Pastikan sinyal GPS aktif.', false);
     }
     var r = await apiCall('add_pengambilan', {
       id_distribusi: idDst,
