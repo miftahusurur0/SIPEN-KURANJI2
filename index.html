@@ -204,6 +204,12 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
 .map-wrap .map-dot.me{background:#4f46e5}
 .map-wrap .map-dot.sppg{background:#ef4444}
 .map-wrap .map-dist{margin-left:auto;color:var(--primary);font-weight:800}
+.map-pill-label{background:var(--text)!important;color:var(--bg,#fff)!important;border:none!important;box-shadow:0 2px 6px rgba(0,0,0,.25)!important;font-size:10px!important;font-weight:800!important;padding:2px 6px!important;border-radius:20px!important}
+.map-pill-label.start{background:#ef4444!important}
+.map-pill-label.end{background:#4f46e5!important}
+.map-pill-label::before{display:none!important}
+.gps-box .val.warn{color:#f59e0b}
+.foto-meta .fm-v.warn{color:#f59e0b}
 .foto-size-label{font-size:11px;font-weight:600;color:var(--ok);margin-top:6px;text-align:center}
 .foto-meta{margin-top:8px;padding:10px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;font-size:12px;display:none}
 .foto-meta.show{display:block}
@@ -560,8 +566,8 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
           <div class="map-wrap" id="antarMapWrap">
             <div class="map-el" id="antarMap"></div>
             <div class="map-legend">
-              <span><i class="map-dot me"></i> Lokasi Anda</span>
-              <span><i class="map-dot sppg"></i> SPPG</span>
+              <span><i class="map-dot sppg"></i> SPPG (Titik Awal)</span>
+              <span><i class="map-dot me"></i> Lokasi Pengiriman (saat foto)</span>
               <span class="map-dist" id="antarMapDist">Jarak: —</span>
             </div>
           </div>
@@ -655,8 +661,8 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
           <div class="map-wrap" id="jemputMapWrap">
             <div class="map-el" id="jemputMap"></div>
             <div class="map-legend">
-              <span><i class="map-dot me"></i> Lokasi Anda</span>
-              <span><i class="map-dot sppg"></i> SPPG</span>
+              <span><i class="map-dot sppg"></i> SPPG (Titik Awal)</span>
+              <span><i class="map-dot me"></i> Lokasi Pengambilan (saat foto)</span>
               <span class="map-dist" id="jemputMapDist">Jarak: —</span>
             </div>
           </div>
@@ -969,7 +975,7 @@ a.link{color:var(--primary);font-weight:700;text-decoration:none}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
 /* API_URL ganti dengan URL Web App kamu (akhiran /exec) */
-const API_URL = 'https://script.google.com/macros/s/AKfycbwK606mpnONn68cTolQwo45laiTKu9JyEHMGxAwR45yc7til_gETzZ7VAksubRP_Xcz/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxvIkoV8hnIF7nyNtZ7eDJ6dMgFkWxy6iFQ6oCQkU2npV7EgCNOhf1WlBxRF1nSCx-s/exec';
 const IN_APPS = typeof google !== 'undefined' && !!google.script && !!google.script.run;
 
 /* ============ IKON SVG ============ */
@@ -1153,17 +1159,34 @@ function apiCall(action, data) {
         .api(Object.assign({ action }, data || {}));
     });
   }
+  /* Kirim foto (payload lebih besar) dapat kena koneksi lambat/timeout —
+     beri waktu lebih panjang & satu kali percobaan ulang otomatis khusus untuk itu */
+  var isHeavy = (action === 'add_distribusi' || action === 'add_pengambilan');
+  var timeoutMs = isHeavy ? 60000 : 25000;
+  var maxAttempts = isHeavy ? 2 : 1;
   return (async () => {
-    let res;
-    try {
-      res = data
-        ? await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
-            body: JSON.stringify(Object.assign({ action }, data)), redirect:'follow' })
-        : await fetch(API_URL + '?action=' + encodeURIComponent(action), { redirect:'follow' });
-    } catch (e) { throw new Error('Tidak dapat terhubung ke server. Cek API_URL & akses Web App "Anyone".'); }
-    const j = await res.json().catch(() => { throw new Error('Respons server tidak valid'); });
-    if (!j.success) throw new Error(j.message || 'Kesalahan server');
-    return j;
+    for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+      var controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+      var timer = controller ? setTimeout(function() { controller.abort(); }, timeoutMs) : null;
+      var res;
+      try {
+        res = data
+          ? await fetch(API_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'},
+              body: JSON.stringify(Object.assign({ action }, data)), redirect:'follow', signal: controller ? controller.signal : undefined })
+          : await fetch(API_URL + '?action=' + encodeURIComponent(action), { redirect:'follow', signal: controller ? controller.signal : undefined });
+      } catch (e) {
+        if (timer) clearTimeout(timer);
+        var isAbort = e && e.name === 'AbortError';
+        if (attempt < maxAttempts) continue; /* jaringan bermasalah -> coba sekali lagi (khusus kirim foto) */
+        throw new Error(isAbort
+          ? 'Koneksi ke server terlalu lama merespons (timeout). Periksa sinyal internet, lalu ketuk Kirim lagi.'
+          : 'Tidak dapat terhubung ke server. Cek koneksi internet, API_URL, & akses Web App "Anyone".');
+      }
+      if (timer) clearTimeout(timer);
+      var j = await res.json().catch(() => { throw new Error('Respons server tidak valid (bukan JSON). Cek deployment Web App / redeploy versi terbaru.'); });
+      if (!j.success) throw new Error(j.message || 'Kesalahan server');
+      return j;
+    }
   })();
 }
 
@@ -1527,6 +1550,12 @@ function setDistLabel(distId, km) {
   distEl.textContent = 'Jarak: ' + (km < 1 ? (km * 1000).toFixed(0) + ' m' : km.toFixed(2) + ' km');
 }
 
+/* SPPG SELALU jadi titik awal rute; titik tujuan tergantung mode (antar/jemput) */
+function _destMeta(prefix) {
+  if (prefix === 'jemput') return { title: 'Lokasi Pengambilan', letter: 'J' };
+  return { title: 'Lokasi Pengiriman', letter: 'K' };
+}
+
 function loadGoogleMaps(key) {
   if (!key) return Promise.resolve(false);
   if (_gmapsReady && window.google && google.maps) return Promise.resolve(true);
@@ -1570,14 +1599,17 @@ function renderLocMapGoogle(prefix, lat, lng, km) {
   var el = document.getElementById(elId);
   if (!el) return;
   var sppg = getSPPG();
+  var dest = _destMeta(prefix);
   setDistLabel(prefix + 'MapDist', km);
   var mePos = { lat: Number(lat), lng: Number(lng) };
   var sppgPos = { lat: Number(sppg.lat), lng: Number(sppg.lng) };
+  /* Rute SELALU digambar dari SPPG (titik awal) -> lokasi foto (tujuan) */
+  var routePath = [sppgPos, mePos];
   if (!_maps[prefix] || _maps[prefix].engine !== 'google') {
     el.innerHTML = '';
     var map = new google.maps.Map(el, {
       zoom: 14,
-      center: mePos,
+      center: sppgPos,
       mapTypeControl: false,
       streetViewControl: false,
       fullscreenControl: true,
@@ -1587,26 +1619,29 @@ function renderLocMapGoogle(prefix, lat, lng, km) {
       engine: 'google',
       map: map,
       me: new google.maps.Marker({
-        position: mePos, map: map, title: 'Lokasi Anda',
-        icon: { path: google.maps.SymbolPath.CIRCLE, scale: 9, fillColor: '#4f46e5', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 }
+        position: mePos, map: map, title: dest.title, label: { text: dest.letter, color: '#fff', fontWeight: '800', fontSize: '11px' },
+        icon: { path: google.maps.SymbolPath.CIRCLE, scale: 11, fillColor: '#4f46e5', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 }
       }),
       sppg: new google.maps.Marker({
-        position: sppgPos, map: map, title: 'SPPG',
-        icon: { path: google.maps.SymbolPath.CIRCLE, scale: 9, fillColor: '#ef4444', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 }
+        position: sppgPos, map: map, title: 'SPPG (Titik Awal)', label: { text: 'S', color: '#fff', fontWeight: '800', fontSize: '11px' },
+        icon: { path: google.maps.SymbolPath.CIRCLE, scale: 11, fillColor: '#ef4444', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 }
       }),
       line: new google.maps.Polyline({
-        path: [mePos, sppgPos], geodesic: true, strokeColor: '#4f46e5', strokeOpacity: 0.85, strokeWeight: 3, map: map
+        path: routePath, geodesic: true, strokeColor: '#4f46e5', strokeOpacity: 0.85, strokeWeight: 3, map: map,
+        icons: [{ icon: { path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW, scale: 3, fillColor: '#4f46e5', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 1 }, offset: '50%' }]
       }),
-      infoMe: new google.maps.InfoWindow({ content: '<b>Lokasi Anda</b>' }),
-      infoSppg: new google.maps.InfoWindow({ content: '<b>SPPG</b>' })
+      infoMe: new google.maps.InfoWindow({ content: '<b>' + dest.title + '</b><br>Lokasi tercatat saat foto diambil/diupload' }),
+      infoSppg: new google.maps.InfoWindow({ content: '<b>SPPG</b><br>Titik awal pengantaran' })
     };
     _maps[prefix].me.addListener('click', function() { _maps[prefix].infoMe.open(map, _maps[prefix].me); });
     _maps[prefix].sppg.addListener('click', function() { _maps[prefix].infoSppg.open(map, _maps[prefix].sppg); });
   } else {
     var m = _maps[prefix];
     m.me.setPosition(mePos);
+    m.me.setTitle(dest.title);
+    m.me.setLabel({ text: dest.letter, color: '#fff', fontWeight: '800', fontSize: '11px' });
     m.sppg.setPosition(sppgPos);
-    m.line.setPath([mePos, sppgPos]);
+    m.line.setPath(routePath);
   }
   var bounds = new google.maps.LatLngBounds();
   bounds.extend(mePos);
@@ -1625,6 +1660,7 @@ function renderLocMapLeaflet(prefix, lat, lng, km) {
     return;
   }
   var sppg = getSPPG();
+  var dest = _destMeta(prefix);
   setDistLabel(prefix + 'MapDist', km);
   try {
     if (!_maps[prefix] || _maps[prefix].engine !== 'leaflet') {
@@ -1642,16 +1678,24 @@ function renderLocMapLeaflet(prefix, lat, lng, km) {
     var m = _maps[prefix];
     var meLatLng = [lat, lng];
     var sppgLatLng = [sppg.lat, sppg.lng];
+    /* Rute SELALU digambar dari SPPG (titik awal) -> lokasi foto (tujuan) */
+    var routeLatLngs = [sppgLatLng, meLatLng];
     if (!m.me) {
-      m.me = L.circleMarker(meLatLng, { radius: 9, color: '#fff', weight: 2, fillColor: '#4f46e5', fillOpacity: 1 }).addTo(m.map).bindPopup('Lokasi Anda');
-      m.sppg = L.circleMarker(sppgLatLng, { radius: 9, color: '#fff', weight: 2, fillColor: '#ef4444', fillOpacity: 1 }).addTo(m.map).bindPopup('SPPG');
-      m.line = L.polyline([meLatLng, sppgLatLng], { color: '#4f46e5', weight: 3, dashArray: '6 6', opacity: 0.85 }).addTo(m.map);
+      m.me = L.circleMarker(meLatLng, { radius: 10, color: '#fff', weight: 2, fillColor: '#4f46e5', fillOpacity: 1 })
+        .addTo(m.map).bindPopup(dest.title + '<br>Lokasi tercatat saat foto');
+      m.me.bindTooltip(dest.letter, { permanent: true, direction: 'center', className: 'map-pill-label end' });
+      m.sppg = L.circleMarker(sppgLatLng, { radius: 10, color: '#fff', weight: 2, fillColor: '#ef4444', fillOpacity: 1 })
+        .addTo(m.map).bindPopup('SPPG<br>Titik awal pengantaran');
+      m.sppg.bindTooltip('S', { permanent: true, direction: 'center', className: 'map-pill-label start' });
+      m.line = L.polyline(routeLatLngs, { color: '#4f46e5', weight: 3, dashArray: '6 6', opacity: 0.85 }).addTo(m.map);
     } else {
       m.me.setLatLng(meLatLng);
+      m.me.setPopupContent(dest.title + '<br>Lokasi tercatat saat foto');
+      m.me.setTooltipContent(dest.letter);
       m.sppg.setLatLng(sppgLatLng);
-      m.line.setLatLngs([meLatLng, sppgLatLng]);
+      m.line.setLatLngs(routeLatLngs);
     }
-    m.map.fitBounds(L.latLngBounds([meLatLng, sppgLatLng]).pad(0.35));
+    m.map.fitBounds(L.latLngBounds(routeLatLngs).pad(0.35));
     setTimeout(function() { try { m.map.invalidateSize(); } catch (_) {} }, 200);
   } catch (err) {
     console.warn('Map Leaflet error', err);
@@ -2256,8 +2300,8 @@ function downloadAbsensiExcel() {
 
 /* ============ FOTO STATE (aman, tidak hilang saat submit) ============ */
 var fotoState = {
-  antar: { b64: '', lat: null, lng: null, acc: null, time: null, jarakKm: null },
-  jemput: { b64: '', lat: null, lng: null, acc: null, time: null, jarakKm: null }
+  antar: { b64: '', lat: null, lng: null, acc: null, time: null, jarakKm: null, isFresh: null },
+  jemput: { b64: '', lat: null, lng: null, acc: null, time: null, jarakKm: null, isFresh: null }
 };
 function getFotoB64(kind) {
   var st = fotoState[kind];
@@ -2272,57 +2316,64 @@ function getFotoB64(kind) {
   return '';
 }
 function clearFotoState(kind) {
-  fotoState[kind] = { b64: '', lat: null, lng: null, acc: null, time: null, jarakKm: null };
+  fotoState[kind] = { b64: '', lat: null, lng: null, acc: null, time: null, jarakKm: null, isFresh: null };
 }
-/** Kunci lokasi SAAT foto diambil/diupload + hitung jarak ke SPPG */
+/**
+ * Kunci lokasi SAAT foto diambil/diupload + hitung jarak ke SPPG.
+ * PENTING: SELALU mengambil titik GPS BARU pada momen ini (bukan memakai
+ * koordinat lama yang mungkin didapat saat tab pertama dibuka / sebelum
+ * driver berpindah tempat). Ini yang membuat peta & lokasi yang tersimpan
+ * benar-benar sesuai dengan tempat foto diambil/diupload.
+ * Koordinat lama (gpsLat/gpsLng) hanya dipakai sebagai cadangan terakhir
+ * jika pengambilan GPS baru benar-benar gagal (mis. sinyal hilang).
+ */
 async function lockFotoLocation(kind) {
   var st = fotoState[kind];
-  var lat = kind === 'antar' ? gpsLat : gpsJemputLat;
-  var lng = kind === 'antar' ? gpsLng : gpsJemputLng;
-  var acc = kind === 'antar' ? gpsAcc : gpsJemputAcc;
-  /* Jika GPS belum ada, ambil sekarang dengan timeout lebih panjang */
-  if (lat == null || lng == null) {
-    var gpsValEl = kind === 'antar' ? $('#antarGpsVal') : $('#jemputGpsVal');
-    if (gpsValEl) { gpsValEl.textContent = 'Mengunci GPS untuk foto...'; gpsValEl.className = 'val'; }
-    try {
-      var pos = await getAccuratePosition({ targetAcc: 50, maxWait: 25000, minSamples: 1,
-        onProgress: function(best) {
-          if (gpsValEl) gpsValEl.textContent = 'Foto GPS: ' + fmtAcc(best.accuracy);
-        }
-      });
-      lat = pos.lat; lng = pos.lng; acc = pos.accuracy;
-      if (kind === 'antar') {
-        gpsLat = lat; gpsLng = lng; gpsAcc = acc;
-        $('#antarLat').value = lat; $('#antarLng').value = lng;
-        updateJarak();
-      } else {
-        gpsJemputLat = lat; gpsJemputLng = lng; gpsJemputAcc = acc;
-        $('#jemputLat').value = lat; $('#jemputLng').value = lng;
-        var jv2 = $('#jemputJarakVal');
-        if (jv2) {
-          var sppg2 = getSPPG();
-          var km2 = haversineKm(sppg2.lat, sppg2.lng, lat, lng);
-          jv2.textContent = km2 < 1 ? (km2 * 1000).toFixed(0) + ' m' : km2.toFixed(2) + ' km';
-        }
+  var gpsValEl = kind === 'antar' ? $('#antarGpsVal') : $('#jemputGpsVal');
+  if (gpsValEl) { gpsValEl.textContent = 'Mengunci GPS untuk foto ini...'; gpsValEl.className = 'val'; }
+  var lat = null, lng = null, acc = null, isFresh = false;
+  try {
+    var pos = await getAccuratePosition({ targetAcc: 25, maxWait: 20000, minSamples: 1,
+      onProgress: function(best) {
+        if (gpsValEl) gpsValEl.textContent = 'Foto GPS: ' + fmtAcc(best.accuracy);
       }
-    } catch (e) {
+    });
+    lat = pos.lat; lng = pos.lng; acc = pos.accuracy; isFresh = true;
+  } catch (e) {
+    /* GPS baru gagal -> baru pakai koordinat lama sbg cadangan, dan beri tahu pengguna dengan jelas */
+    var fbLat = kind === 'antar' ? gpsLat : gpsJemputLat;
+    var fbLng = kind === 'antar' ? gpsLng : gpsJemputLng;
+    var fbAcc = kind === 'antar' ? gpsAcc : gpsJemputAcc;
+    if (fbLat != null && fbLng != null) {
+      lat = fbLat; lng = fbLng; acc = fbAcc;
+      if (gpsValEl) { gpsValEl.textContent = '⚠ Pakai lokasi terakhir (' + fmtAcc(acc) + ')'; gpsValEl.className = 'val warn'; }
+      toast('GPS baru gagal dikunci untuk foto ini, memakai lokasi terakhir yang diketahui. Pastikan izin lokasi & GPS aktif sebelum kirim.', false);
+    } else {
       if (gpsValEl) { gpsValEl.textContent = 'GPS gagal: ' + (e.message || 'timeout'); gpsValEl.className = 'val err'; }
-      console.warn('lockFotoLocation GPS fallback gagal:', e);
+      console.warn('lockFotoLocation GPS gagal total:', e);
     }
   }
-  st.lat = lat; st.lng = lng; st.acc = acc; st.time = Date.now();
+  st.lat = lat; st.lng = lng; st.acc = acc; st.time = Date.now(); st.isFresh = isFresh;
   if (lat != null && lng != null) {
     var sppg = getSPPG();
     st.jarakKm = haversineKm(sppg.lat, sppg.lng, lat, lng);
-    /* Update UI GPS + map + meta ke lokasi FOTO */
+    /* Sinkronkan variabel GPS global + UI + peta + meta foto ke lokasi FOTO ini */
     if (kind === 'antar') {
+      gpsLat = lat; gpsLng = lng; gpsAcc = acc;
       $('#antarLat').value = lat; $('#antarLng').value = lng;
+      if (isFresh) { $('#antarGpsVal').textContent = lat.toFixed(6) + ', ' + lng.toFixed(6); $('#antarGpsVal').className = 'val ok'; }
       renderLocMap('antar', lat, lng, st.jarakKm);
       fillFotoMeta('antar', lat, lng);
+      var av = $('#antarJarakVal');
+      if (av) { var t1 = st.jarakKm < 1 ? (st.jarakKm * 1000).toFixed(0) + ' m' : st.jarakKm.toFixed(2) + ' km'; if (acc != null) t1 += ' · ' + fmtAcc(acc); av.textContent = t1; }
     } else {
+      gpsJemputLat = lat; gpsJemputLng = lng; gpsJemputAcc = acc;
       $('#jemputLat').value = lat; $('#jemputLng').value = lng;
+      if (isFresh) { var jv0 = $('#jemputGpsVal'); if (jv0) { jv0.textContent = lat.toFixed(6) + ', ' + lng.toFixed(6); jv0.className = 'val ok'; } }
       renderLocMap('jemput', lat, lng, st.jarakKm);
       fillFotoMeta('jemput', lat, lng);
+      var jv2 = $('#jemputJarakVal');
+      if (jv2) { jv2.textContent = st.jarakKm < 1 ? (st.jarakKm * 1000).toFixed(0) + ' m' : st.jarakKm.toFixed(2) + ' km'; }
     }
   }
   return st;
@@ -2335,19 +2386,23 @@ async function submitAntar(e) {
   btn.disabled = true; btn.classList.add('loading');
   try {
     const s = sess() || {};
+    if (!$('#selAntarInstansi').value) { toast('Pilih instansi terlebih dahulu', false); return; }
     var fotoB64 = getFotoB64('antar');
     var st = fotoState.antar;
-    /* Lokasi wajib dari saat foto; fallback GPS live */
+    /* Lokasi wajib dari saat foto diambil/diupload; fallback GPS live hanya jika belum sempat terkunci */
     var lat = st.lat != null ? st.lat : (parseFloat($('#antarLat').value) || gpsLat);
     var lng = st.lng != null ? st.lng : (parseFloat($('#antarLng').value) || gpsLng);
     if (!fotoB64 || fotoB64.length < 100) {
-      toast('Foto belum siap. Ketuk Kamera atau Upload Galeri, tunggu preview muncul.', false);
+      toast('Foto belum siap. Ketuk Kamera atau Upload Galeri, tunggu sampai muncul "✓ Foto tersimpan".', false);
       return;
     }
     if (!lat || !lng) {
-      toast('Lokasi GPS belum tersedia. Tunggu koordinat GPS muncul (hijau), lalu kirim ulang.', false);
+      toast('Lokasi GPS belum tersedia. Aktifkan GPS/izin lokasi, lalu ambil ulang foto agar lokasi terkunci.', false);
       fetchGPS();
       return;
+    }
+    if (st.isFresh === false) {
+      toast('Perhatian: lokasi yang dikirim memakai GPS terakhir (bukan lokasi baru saat foto ini). Pastikan sinyal GPS aktif untuk pengiriman berikutnya.', false);
     }
     const payload = {
       action: 'add_distribusi',
@@ -2364,7 +2419,6 @@ async function submitAntar(e) {
       catatan: document.querySelector('#formAntar input[name=catatan]').value,
       by: s.username || ''
     };
-    if (!payload.id_instansi) { toast('Pilih instansi terlebih dahulu', false); return; }
     const json = await apiCall('add_distribusi', payload);
     toast(json.message, true);
     e.target.reset();
@@ -3073,6 +3127,38 @@ function showInstantPreview(area, file, previewId, placeholder) {
     return preview;
   } catch (_) { return null; }
 }
+/* Deteksi HEIC/HEIF (format foto default iPhone) — banyak browser Android/desktop
+   tidak bisa mendekode format ini, sehingga foto gagal diproses/dikirim */
+function _isLikelyHeic(file) {
+  var t = (file.type || '').toLowerCase();
+  var n = (file.name || '').toLowerCase();
+  return t.indexOf('heic') > -1 || t.indexOf('heif') > -1 || /\.hei[cf]$/.test(n);
+}
+/* Jaring pengaman terakhir: pastikan ukuran akhir foto tidak terlalu besar,
+   supaya pengiriman ke server tidak gagal/timeout di koneksi lambat */
+function _ensureSizeCap(dataUrl) {
+  return new Promise(function(resolve) {
+    try {
+      var approxBytes = dataUrl.length * 0.75;
+      if (approxBytes <= FOTO_MAX_BYTES * 1.6) { resolve(dataUrl); return; }
+      var img = new Image();
+      img.onload = function() {
+        var maxSide = 480;
+        var scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+        var canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(img.width * scale));
+        canvas.height = Math.max(1, Math.round(img.height * scale));
+        var ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        try { resolve(canvas.toDataURL('image/jpeg', 0.5)); }
+        catch (_) { resolve(dataUrl); }
+      };
+      img.onerror = function() { resolve(dataUrl); };
+      img.src = dataUrl;
+    } catch (_) { resolve(dataUrl); }
+  });
+}
 /* Helper: preview instan + kompres paralel dengan GPS */
 async function handleFotoFile(file, opts) {
   if (!file) { toast('Tidak ada file dipilih', false); return; }
@@ -3080,6 +3166,7 @@ async function handleFotoFile(file, opts) {
   var placeholder = $(opts.placeholderId);
   if (!area) return;
   var kind = opts.kind || 'antar';
+  var heicFile = _isLikelyHeic(file);
   ensureFotoLoading(area);
   area.classList.add('is-processing');
   _fotoProgress(area, 'Membaca foto…');
@@ -3095,18 +3182,34 @@ async function handleFotoFile(file, opts) {
   sizeEl.textContent = 'Mengompres…';
   try {
     _fotoProgress(area, 'Mengompres foto…');
-    /* Kompres + kunci GPS berjalan paralel */
-    var compressP = compressImage(file).catch(function() {
-      return new Promise(function(resolve, reject) {
-        var fr = new FileReader();
-        fr.onload = function() { resolve(fr.result); };
-        fr.onerror = function() { reject(new Error('Gagal baca file')); };
-        fr.readAsDataURL(file);
+    /* Kompres + kunci GPS berjalan paralel.
+       CATATAN PENTING: jika kompresi utama gagal, JANGAN kirim file mentah
+       (bisa berukuran puluhan MB dan menyebabkan kirim foto gagal/timeout).
+       Coba sekali lagi dengan metode lebih sederhana; jika tetap gagal,
+       hentikan dengan pesan yang jelas — termasuk saran khusus untuk foto HEIC/HEIF. */
+    var compressP = compressImage(file).catch(function(errMain) {
+      console.warn('Kompres utama gagal, mencoba metode cadangan:', errMain);
+      return _loadImageEl(file).then(function(img) {
+        var maxSide = 640;
+        var scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+        var canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(img.width * scale));
+        canvas.height = Math.max(1, Math.round(img.height * scale));
+        var ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        return canvas.toDataURL('image/jpeg', 0.55);
+      }).catch(function() {
+        var reason = heicFile
+          ? 'Format foto HEIC/HEIF dari galeri belum bisa diproses di perangkat/browser ini. Ketuk tombol "Kamera" untuk memotret langsung, atau di iPhone buka Setelan > Kamera > Format lalu pilih "Paling Kompatibel", kemudian upload ulang.'
+          : 'Foto tidak bisa diproses (format tidak didukung atau file rusak). Coba foto lain, atau gunakan tombol Kamera untuk memotret langsung.';
+        throw new Error(reason);
       });
     });
     var gpsP = lockFotoLocation(kind).catch(function() { return fotoState[kind]; });
     var b64 = await compressP;
     if (!b64 || String(b64).indexOf('data:') !== 0) throw new Error('Hasil foto tidak valid');
+    b64 = await _ensureSizeCap(b64);
     fotoState[kind].b64 = b64;
     if (typeof opts.setBase64 === 'function') opts.setBase64(b64);
     if (preview) {
@@ -3342,12 +3445,15 @@ $('#formJemput').addEventListener('submit', async function(e) {
     var lat = st.lat != null ? st.lat : (parseFloat($('#jemputLat').value) || gpsJemputLat);
     var lng = st.lng != null ? st.lng : (parseFloat($('#jemputLng').value) || gpsJemputLng);
     if (!fotoB64 || fotoB64.length < 100) {
-      toast('Foto belum siap. Ketuk Kamera atau Upload Galeri, tunggu preview muncul.', false);
+      toast('Foto belum siap. Ketuk Kamera atau Upload Galeri, tunggu sampai muncul "✓ Foto tersimpan".', false);
       return;
     }
     if (!lat || !lng) {
       toast('Lokasi saat foto belum ada. Izinkan GPS, lalu ambil/upload foto lagi.', false);
       return;
+    }
+    if (st.isFresh === false) {
+      toast('Perhatian: lokasi yang dikirim memakai GPS terakhir (bukan lokasi baru saat foto ini). Pastikan sinyal GPS aktif.', false);
     }
     var r = await apiCall('add_pengambilan', {
       id_distribusi: idDst,
